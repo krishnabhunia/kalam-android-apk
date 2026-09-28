@@ -1,0 +1,72 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kalam 1.15.D2 — K71 two-stage group collapse (corrected)</title><style>
+body{font-family:Roboto,system-ui,sans-serif;background:#F6F3EE;margin:0;padding:18px;color:#1C1B1F}
+h1{font-size:20px;margin:0 0 4px} h2{font-size:16px;margin:22px 0 8px;color:#123472}
+.note{font-size:13px;color:#5F5C57;margin:0 0 12px}
+.phone{width:390px;background:#FFFBF4;border:1px solid #D8D2C6;border-radius:22px;padding:14px;margin:10px 0}
+.hdr{background:#E9EEF9;color:#123472;font-weight:600;border-radius:9px;padding:6px 11px;font-size:13.5px;margin:8px 0 4px;display:flex;justify-content:space-between}
+.card{border:1px solid #D8D2C6;border-radius:14px;padding:10px 14px;margin:7px 0;background:#fff}
+.mini{padding:7px 14px;font-size:13px}
+.row{display:flex;justify-content:space-between;align-items:baseline}
+.city{font-weight:600;font-size:15.5px}.reg{font-size:12px;color:#5F5C57}
+.time{font-size:22px;font-weight:600;color:#123472}.t2{font-size:14px;font-weight:600;color:#123472}
+.strip{font-size:12.5px;margin-top:5px}.aqi{display:inline-block;padding:0 8px;border-radius:999px;font-weight:600;font-size:12px;background:#FFF3C4;color:#7A5C00;border:1px solid #E0C34D}
+.sun{font-size:12px;color:#5F5C57;margin-top:5px}
+.stage{background:#123472;color:#fff;border-radius:8px;display:inline-block;padding:2px 10px;font-size:12.5px;margin:14px 0 4px}
+.arrow{text-align:center;font-size:20px;color:#0F6E56;margin:2px 0}
+.rec{background:#E1F5EE;color:#04342C;border:1px solid #0F6E56;border-radius:10px;padding:8px 12px;font-size:13px;margin:10px 0}
+table{border-collapse:collapse;font-size:13px;margin:8px 0}td,th{border:1px solid #C9C2B4;padding:5px 9px;text-align:left}th{background:#EFE9DD}
+</style></head><body>
+<h1>1.15.D2 — K71 corrected: two-stage collapse &amp; two-stage expand</h1>
+<p class="note">Gesture (my choice per your delegation): <b>single taps</b> on the group header, walking a 4-step cycle — no double-tap (slower, and Android talkback handles single taps better). Every tap moves exactly one stage.</p>
+
+<div class="stage">STAGE A — fully expanded &nbsp;▾▾</div>
+<div class="phone">
+<div class="hdr"><span>▾▾ India (2)</span><span class="reg">tap → all cities collapse</span></div>
+<div class="card"><div class="row"><div><span class="city">Kolkata</span> <span class="reg">31° · Updated 12m</span></div><div class="time">14:22</div></div>
+<div class="strip">Humidity <b>74%</b> · Wind <b>12 km/h</b> · Precip <b>0.4 mm</b> · <span class="aqi">AQI 132</span></div>
+<div class="sun">☀ 05:24 – 17:48 · 12h 24m &nbsp; ☾ 03:11 – 16:40</div></div>
+<div class="card"><div class="row"><div><span class="city">Mumbai</span> <span class="reg">29°</span></div><div class="time">14:22</div></div>
+<div class="strip">Humidity <b>81%</b> · Wind <b>18 km/h</b> · <span class="aqi" style="background:#DCEFE4;color:#0F6E56;border-color:#0F6E56">AQI 64</span></div>
+<div class="sun">☀ 06:11 – 18:32 · 12h 21m &nbsp; ☾ 03:58 – 17:20</div></div>
+</div>
+<div class="arrow">⭣ tap 1 (collapse stage 1)</div>
+
+<div class="stage">STAGE B — cities collapsed, deck visible &nbsp;▾</div>
+<div class="phone">
+<div class="hdr"><span>▾ India (2)</span><span class="reg">tap → deck hides</span></div>
+<div class="card mini"><div class="row"><div>▸ <span class="city">Kolkata</span> <b>31°</b> <span class="t2">14:22 hrs</span></div><div class="reg">☀ 05:24–17:48</div></div></div>
+<div class="card mini"><div class="row"><div>▸ <span class="city">Mumbai</span> <b>29°</b> <span class="t2">14:22 hrs</span></div><div class="reg">☀ 06:11–18:32</div></div></div>
+</div>
+<div class="arrow">⭣ tap 2 (collapse stage 2)</div>
+
+<div class="stage">STAGE C — deck hidden &nbsp;▸</div>
+<div class="phone">
+<div class="hdr"><span>▸ India (2)</span><span class="reg">tap → cards return collapsed</span></div>
+<div class="hdr"><span>▾▾ Switzerland (1)</span><span class="reg">other groups independent</span></div>
+<div class="card mini"><div class="row"><div>▾ <span class="city">Zurich</span> <b>18°</b> <span class="t2">10:52 hrs</span></div></div></div>
+</div>
+<div class="arrow">⭣ tap 3 → STAGE B (cards back, collapsed) &nbsp;·&nbsp; tap 4 → STAGE A (all expand)</div>
+
+<h2>Rules</h2>
+<table>
+<tr><th>#</th><th>Rule</th></tr>
+<tr><td>1</td><td>Cycle per group: A ▾▾ → B ▾ → C ▸ → B ▾ → A ▾▾ … (single taps; two taps to fully hide, two to fully restore — exactly your two-stage requirement both ways)</td></tr>
+<tr><td>2</td><td>Stage B/A transitions WRITE per-card K53 states (B: all collapsed, A: all expanded) — an individual card can still be toggled by its own tap afterwards; the header glyph reflects the last STAGE, not live card census</td></tr>
+<tr><td>3</td><td>Stage persisted per group name (Settings field 41: "India:2,Asia:0" style) — survives restart and Country↔Continent switches independently</td></tr>
+<tr><td>4</td><td>Grouping OFF (None): headers absent, nothing changes; K65 sort applies inside groups as today</td></tr>
+<tr><td>5</td><td>Companions: stage-cycle unit tests (tap walk A→B→C→B→A, persistence codec), guarded decode, one log line per stage change</td></tr>
+</table>
+
+<h2>K72 (already approved — unchanged, for context)</h2>
+<p class="note">✏️ beside 🗑 → rename dialog · alias stored as ClockPlace field 7 · original city joins the region line · blank restores · displayed-name sort/search.</p>
+
+<h2>K73 — rejected, dropped</h2>
+<p class="note">The v1.15 metrics grid stays exactly as released.</p>
+
+<h2>Blocker question</h2>
+<table>
+<tr><th>#</th><th>Question</th><th>Recommendation</th></tr>
+<tr><td>1</td><td>Reaching Stage A (second expand tap): expand ALL cards, or restore each card's previous mix?</td><td>Expand ALL (symmetric with force-collapse; deterministic)</td></tr>
+</table>
+</body></html>

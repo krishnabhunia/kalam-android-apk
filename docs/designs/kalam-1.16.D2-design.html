@@ -1,0 +1,61 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kalam 1.16.D2 — K74/K75 revised</title><style>
+body{font-family:Roboto,system-ui,sans-serif;background:#F6F3EE;margin:0;padding:18px;color:#1C1B1F}
+h1{font-size:20px;margin:0 0 4px} h2{font-size:16px;margin:22px 0 8px;color:#123472}
+.note{font-size:13px;color:#5F5C57;margin:0 0 12px}
+.phone{width:390px;background:#FFFBF4;border:1px solid #D8D2C6;border-radius:22px;padding:14px;margin:10px 0}
+.chips{display:flex;gap:8px;margin-bottom:8px}.chip{border:1px solid #123472;color:#123472;border-radius:999px;padding:3px 12px;font-size:12.5px;font-weight:600}
+.card{border:1px solid #D8D2C6;border-radius:12px;padding:8px 12px;margin:5px 0;background:#fff;font-size:13px}
+.row{display:flex;justify-content:space-between;align-items:baseline}.city{font-weight:600}.t{color:#123472;font-weight:600}
+.badge{display:inline-block;background:#FFF3C4;border:1px solid #E0C34D;color:#7A5C00;border-radius:999px;padding:0 7px;font-size:11.5px;font-weight:600}
+.menu{border:2px solid #123472;border-radius:12px;background:#fff;width:250px;padding:6px;font-size:13.5px;margin:8px 0}
+.mi{padding:6px 10px;border-radius:8px}.mi.on{background:#E9EEF9;font-weight:700;color:#123472}.mi.off{color:#B0ABA2}
+.stage{background:#123472;color:#fff;border-radius:8px;display:inline-block;padding:2px 10px;font-size:12.5px;margin:12px 0 4px}
+.arrow{text-align:center;font-size:18px;color:#0F6E56;margin:2px 0}
+table{border-collapse:collapse;font-size:13px;margin:8px 0}td,th{border:1px solid #C9C2B4;padding:5px 9px;text-align:left}th{background:#EFE9DD}
+.rec{background:#E1F5EE;color:#04342C;border:1px solid #0F6E56;border-radius:10px;padding:8px 12px;font-size:13px;margin:10px 0}
+</style></head><body>
+<h1>1.16.D2 — K75 metric sorts (revised) · K74 hierarchical grouping (unchanged)</h1>
+
+<h2>K75 — lifecycle of a metric sort</h2>
+<div class="stage">1 · Chosen before any reading exists</div>
+<div class="phone">
+<div class="chips"><span class="chip">Sort: Temperature ↓ · waiting for data</span><span class="chip">Group: None ▾</span></div>
+<div class="card"><div class="row"><span class="city">Kolkata <span class="badge">—</span></span><span class="t">14:22</span></div></div>
+<div class="card"><div class="row"><span class="city">Zurich <span class="badge">—</span></span><span class="t">10:52</span></div></div>
+<div class="card"><div class="row"><span class="city">Mumbai <span class="badge">—</span></span><span class="t">14:22</span></div></div>
+<div class="note" style="margin:6px 0 0">List stays in the DEFAULT order (Added) until the first reading lands.</div>
+</div>
+<div class="arrow">⭣ readings arrive (auto or pull-to-refresh) — reorder happens here, jump accepted</div>
+<div class="stage">2 · Data loaded — metric sort in force</div>
+<div class="phone">
+<div class="chips"><span class="chip">Sort: Temperature ↓</span><span class="chip">Group: None ▾</span></div>
+<div class="card"><div class="row"><span class="city">Kolkata <span class="badge">31°</span></span><span class="t">14:22</span></div></div>
+<div class="card"><div class="row"><span class="city">Mumbai <span class="badge">29°</span></span><span class="t">14:22</span></div></div>
+<div class="card"><div class="row"><span class="city">Zurich <span class="badge">18°</span></span><span class="t">10:52</span></div></div>
+<div class="card"><div class="row"><span class="city">Bajkul <span class="badge">—</span></span><span class="t">14:22</span></div></div>
+<div class="note" style="margin:6px 0 0">Bajkul has no reading → last. Stale readings are used as they are.</div>
+</div>
+
+<h2>Sort menu — metric entries unlock when data exists; re-tap flips direction</h2>
+<div class="menu">
+<div class="mi">Added</div><div class="mi">Name A–Z</div><div class="mi">Time</div><div class="mi">Country</div>
+<div class="mi on">Temperature ↓ &nbsp;<span style="font-weight:400;color:#5F5C57">tap again → ↑</span></div>
+<div class="mi">Air quality</div>
+<div class="mi off">Humidity &nbsp;(waiting for data)</div>
+</div>
+<table>
+<tr><th>#</th><th>Rule</th></tr>
+<tr><td>1</td><td>Default order before data = <b>Added</b>; the chosen metric sort takes over the moment at least one clock has that reading</td></tr>
+<tr><td>2</td><td>Menu: a metric entry is greyed ("waiting for data") until any clock carries it; the persisted choice survives — the chip says "waiting for data" meanwhile</td></tr>
+<tr><td>3</td><td>Stale-but-present readings count as-is; null/void → end of list (added order among themselves), "—" badge</td></tr>
+<tr><td>4</td><td>Reorders on first load and every reload are accepted, including under the finger</td></tr>
+<tr><td>5</td><td>Direction: re-tapping the active entry flips ↓/↑ (chip + entry show the arrow); works on Name/Time/Country too, "Added" stays fixed. Persisted (Settings field 42: sortDir)</td></tr>
+<tr><td>6</td><td>Inside groups, sorts apply per group exactly like today</td></tr>
+</table>
+
+<h2>K74 — hierarchical grouping (as in D1, no change)</h2>
+<p class="note">Menu of six (nothing removed); state = second-last region segment; every header level runs the K71 four-step cycle with path-scoped stage keys ("India▸West Bengal"); indent + pill weight per level.</p>
+
+<div class="rec">Blocker status: <b>2 cleared</b> (null → last) · direction mechanism = re-tap flip on all but Added · sub-headers = full cycle everywhere. The last two are proceeding on recommendation unless you object — no open blockers otherwise.</div>
+</body></html>

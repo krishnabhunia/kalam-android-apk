@@ -1,0 +1,95 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kalam 1.21.D2 — K83 GitHub release channel &amp; self-update · K82 calendar authority</title><style>
+body{font-family:Roboto,system-ui,sans-serif;background:#F6F3EE;margin:0;padding:18px;color:#1C1B1F}
+h1{font-size:20px;margin:0 0 4px} h2{font-size:16px;margin:24px 0 8px;color:#123472}
+.note{font-size:13px;color:#5F5C57;margin:0 0 12px}
+.phone{width:372px;background:#FFFBF4;border:1px solid #D8D2C6;border-radius:22px;padding:14px;margin:10px 0}
+.card{background:#fff;border:1px solid #D8D2C6;border-radius:14px;padding:11px 14px;margin:8px 0;font-size:13.5px}
+.card b{color:#123472}
+.pill{display:inline-block;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:600}
+.ok{background:#E1F5EE;color:#04342C}.warn{background:#FFF3C4;color:#7A5C00}.bad{background:#FDECEA;color:#7A1F1F}
+.btn{display:inline-block;border-radius:10px;padding:7px 14px;font-size:13px;font-weight:600;margin:6px 6px 0 0}
+.p{background:#123472;color:#fff}.s{background:#E9EEF9;color:#123472}
+.flow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12.5px;margin:8px 0}
+.step{background:#fff;border:1px solid #D8D2C6;border-radius:9px;padding:6px 9px}
+.arr{color:#123472;font-weight:700}
+table{border-collapse:collapse;font-size:13px;margin:8px 0;width:100%}td,th{border:1px solid #C9C2B4;padding:5px 9px;text-align:left;vertical-align:top}th{background:#EFE9DD}
+.rec{background:#E1F5EE;color:#04342C;border:1px solid #0F6E56;border-radius:10px;padding:8px 12px;font-size:13px;margin:10px 0}
+.warnbox{background:#FDECEA;border:1px solid #C00000;color:#7A1F1F;border-radius:10px;padding:9px 12px;font-size:13px;margin:10px 0}
+code{background:#EFE9DD;padding:1px 5px;border-radius:4px;font-size:12px}
+</style></head><body>
+<h1>1.21.D2 — K83 GitHub release channel + in-app self-update · K82 calendar authority</h1>
+
+<div class="warnbox"><b>⚠ Two facts that shape everything below — surfaced before any build.</b><br>
+1. <code>krishnabhunia/kalam-calendar</code> is the <b>ICS-feed project</b> (kalam_ics.py, rk/yg/gk.ics, monthly refresh Action). It has <b>zero GitHub Releases</b> and <b>no Android source</b>. The Android app has only ever lived in the source zips in this chat. Blocker 1 decides where the APK goes.<br>
+2. This session can <b>clone/read</b> the repo but <b>cannot push</b> — the Claude GitHub App is not installed for your account. So either you publish each release (I hand you the exact files + commands), or you install the app once and I publish directly. Blocker 2.</div>
+
+<h2>K83 — How the update channel works</h2>
+<div class="flow">
+<span class="step">Release build passes gates</span><span class="arr">→</span>
+<span class="step">Tag <code>v1.22</code> + GitHub Release with <code>Kalam-1.22.apk</code> + <code>update.json</code></span><span class="arr">→</span>
+<span class="step">App: WorkManager check every 24 h (Wi-Fi/any)</span><span class="arr">→</span>
+<span class="step">Fetch <code>update.json</code> (tiny, one request)</span><span class="arr">→</span>
+<span class="step">versionCode newer? → notification “Kalam 1.22 available”</span><span class="arr">→</span>
+<span class="step">Tap → download APK → SHA-256 check → Android installer</span>
+</div>
+
+<div class="phone">
+<div class="card"><b>Settings › Updates</b><br>
+Installed: 1.21 (code 22) &nbsp; <span class="pill ok">Up to date</span><br>
+Last checked: today 15:20 &nbsp;·&nbsp; Channel: GitHub Releases<br>
+<span class="btn s">Check now</span></div>
+<div class="card"><b>Update available — Kalam 1.22</b> <span class="pill warn">14.8 MB</span><br>
+<span class="note" style="margin:4px 0">Released 05-Oct-2026 · What's new: Calendar authority setting (K82) · …</span>
+<span class="btn p">Download &amp; install</span><span class="btn s">Later</span></div>
+<div class="card"><b>Installing…</b><br>
+Downloaded ✓ &nbsp; Verified SHA-256 ✓ &nbsp; <span class="note">Android will ask you to confirm the install.</span></div>
+</div>
+
+<table>
+<tr><th>#</th><th>Rule</th></tr>
+<tr><td>1</td><td><b>Manifest first, never scrape.</b> The app fetches one small <code>update.json</code> from the release (versionCode, versionName, apk URL, sha256, size, releaseDate, notes). No GitHub API calls, no rate limits, no tokens.</td></tr>
+<tr><td>2</td><td><b>Background check</b>: WorkManager periodic job, every 24 h, network-required, battery-friendly. Also <b>Check now</b> in Settings. First check runs ~1 min after install.</td></tr>
+<tr><td>3</td><td><b>Decision</b>: update offered only if manifest <code>versionCode</code> &gt; installed. Same-or-lower is silently ignored (protects against a bad manifest).</td></tr>
+<tr><td>4</td><td><b>Download</b>: DownloadManager to app-private cache; <b>SHA-256 verified</b> against the manifest before install; mismatch → file deleted, “Update failed verification” shown, nothing installed.</td></tr>
+<tr><td>5</td><td><b>Install</b>: hands the verified APK to the Android package installer (FileProvider + <code>REQUEST_INSTALL_PACKAGES</code>). Android shows its own confirm sheet; first time it asks you to allow “install unknown apps” for Kalam — one-time.</td></tr>
+<tr><td>6</td><td><b>Signing</b>: Android refuses an update signed with a different key. All releases so far are <i>debug-signed</i> with this container's throwaway key — <b>that key is lost on every container reset</b>. So K83 introduces a <b>stable release keystore</b> (generated once, kept by you, supplied to me at build). The <b>first</b> GitHub release will need a one-time uninstall/reinstall because the signature changes; every release after that updates in place. Blocker 3.</td></tr>
+<tr><td>7</td><td><b>Never nags</b>: one notification per new version; “Later” silences it until the next version. No auto-install without your tap.</td></tr>
+<tr><td>8</td><td><b>Fail-safe</b>: any error (offline, 404, bad JSON, bad hash) → logged, quietly retried next cycle; the app never blocks or degrades because updates are unreachable.</td></tr>
+<tr><td>9</td><td><b>Companions</b>: manifest parser + version-compare vectors, SHA-256 verify vectors (good/bad/truncated), “lower version ignored” vector, one log line per check; a real manifest for the shipping version is baked as a test fixture.</td></tr>
+</table>
+
+<h2>Release procedure (what happens on each “Release” from now on)</h2>
+<table>
+<tr><th>Step</th><th>Who</th><th>Action</th></tr>
+<tr><td>1</td><td>me</td><td>Gated build as today (tests · version gate · badging · md5) — now signed with the release keystore</td></tr>
+<tr><td>2</td><td>me</td><td>Generate <code>update.json</code> (sha256 computed from the delivered APK) and the release notes</td></tr>
+<tr><td>3</td><td>me → repo</td><td>Push tag <code>v1.N</code> + create the GitHub Release with both assets (if push is enabled) — otherwise I hand you a 3-line <code>gh release create</code> command and the files</td></tr>
+<tr><td>4</td><td>me</td><td>Verify: fetch the published <code>update.json</code> from the release URL and assert it matches the delivered APK's hash and versionCode <b>before</b> calling the release done</td></tr>
+<tr><td>5</td><td>you</td><td>Phone picks it up within 24 h, or Settings › Check now</td></tr>
+</table>
+
+<h2>K82 — Calendar authority setting (queued from the root-cause)</h2>
+<div class="phone"><div class="card"><b>Settings › Bengali calendar</b><br>
+◉ Drik (drikpanchang, Lahiri) — <span class="note">verified; default</span><br>
+○ Traditional (Surya Siddhanta, Gupta Press) — <span class="note">matches printed almanacs</span><br>
+<span class="note" style="margin-top:6px">Today: Drik ১১ আশ্বিন · Traditional ১০ আশ্বিন. Both are correct in their own tradition; they differ only near month boundaries.</span></div></div>
+<table>
+<tr><th>#</th><th>Rule</th></tr>
+<tr><td>1</td><td>Adds a Surya-Siddhanta mean-sun engine beside the drik one; the setting picks which drives the Bengali date, month grid and the Day/Week lines. Tithi stays drik (SS tithi is out of scope).</td></tr>
+<tr><td>2</td><td>Golden vectors for the SS engine will be taken from a Gupta Press–aligned source at build (Date Bridge value for 22 Sep = 4 Ashwin is one; I need 2 more dates from your almanac — blocker 4).</td></tr>
+<tr><td>3</td><td>The Day tab shows a one-word method tag next to the Bengali date so you always know which authority you are reading.</td></tr>
+</table>
+
+<div class="rec">✔ Recommended: K83 manifest-based channel on a <b>new dedicated repo</b> <code>krishnabhunia/kalam-android</code> (source + releases), stable release keystore, 24 h check, SHA-256-verified install. K82 as a setting defaulting to Drik.</div>
+
+<h2>Blocker questions</h2>
+<table>
+<tr><th>#</th><th>Question</th><th>Recommendation</th></tr>
+<tr><td>1</td><td>Where do releases live: (a) a <b>new</b> repo <code>kalam-android</code> for the Android source + APK releases, or (b) Releases attached to the existing <code>kalam-calendar</code> ICS repo?</td><td><b>(a) new repo</b> — keeps the feed project clean and lets me push the full Android source history there</td></tr>
+<tr><td>2</td><td>Publishing: install the Claude GitHub App once so I can push tags/releases directly, or you run the release command I hand you each time?</td><td>Install the app (one-time) — removes a manual step from every release</td></tr>
+<tr><td>3</td><td>Release keystore: I generate it and hand it to you to keep (you re-attach it on each Release), or you generate it yourself?</td><td>I generate, you keep — I will never store it in the repo or outputs</td></tr>
+<tr><td>4</td><td>K82 golden vectors: can you send 2–3 dates with their Gupta Press Bengali date (ideally one near a month start)?</td><td>Needed before K82 can be built with a gate</td></tr>
+<tr><td>5</td><td>Check cadence: 24 h, or 12 h?</td><td>24 h</td></tr>
+</table>
+</body></html>

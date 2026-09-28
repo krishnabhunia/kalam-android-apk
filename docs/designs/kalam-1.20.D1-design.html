@@ -1,0 +1,80 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kalam 1.20.D1 — K79 Alarm popup screen &amp; controls</title><style>
+body{font-family:Roboto,system-ui,sans-serif;background:#F6F3EE;margin:0;padding:18px;color:#1C1B1F}
+h1{font-size:20px;margin:0 0 4px} h2{font-size:16px;margin:22px 0 8px;color:#123472}
+.note{font-size:13px;color:#5F5C57;margin:0 0 12px}
+.lock{width:330px;background:#10162B;border-radius:26px;padding:22px 16px;margin:10px 0;color:#fff;text-align:center}
+.lock .now{font-size:34px;font-weight:600;letter-spacing:.5px}
+.lock .dt{font-size:13px;opacity:.75;margin-bottom:18px}
+.box{background:#fff;color:#1C1B1F;border-radius:20px;padding:18px 14px;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+.box .ico{font-size:30px}.box .ttl{font-size:19px;font-weight:700;color:#123472;margin-top:4px}
+.box .sub{font-size:13.5px;color:#5F5C57;margin-top:3px}
+.big{display:block;width:100%;border:0;border-radius:14px;padding:13px 0;font-size:16px;font-weight:700;margin-top:12px}
+.stop{background:#C00000;color:#fff}.snz{background:#E9EEF9;color:#123472}
+.half{display:inline-block;width:47%;margin:12px 1% 0}
+.card{width:330px;background:#fff;border:1px solid #D8D2C6;border-radius:14px;padding:10px 12px;margin:10px 0;font-size:13px}
+.actbar{display:flex;gap:8px;margin-top:8px}
+.act{flex:1;text-align:center;border:1px solid #123472;color:#123472;border-radius:10px;padding:6px 0;font-weight:600;font-size:13px}
+.act.red{border-color:#C00000;color:#C00000}
+table{border-collapse:collapse;font-size:13px;margin:8px 0}td,th{border:1px solid #C9C2B4;padding:5px 9px;text-align:left}th{background:#EFE9DD}
+.rec{background:#E1F5EE;color:#04342C;border:1px solid #0F6E56;border-radius:10px;padding:8px 12px;font-size:13px;margin:10px 0}
+.bad{background:#FDECEA;border:1px solid #C00000;color:#7A1F1F;border-radius:10px;padding:8px 12px;font-size:13px;margin:10px 0}
+</style></head><body>
+<h1>K79 — Alarm popup screen with reachable controls (fixes v1.20)</h1>
+<div class="bad"><b>What v1.20 shipped:</b> a full-screen intent that opened the ordinary app screen + a Dismiss action with icon id 0 on an ongoing notification. Result: often no visible button, nothing tappable when the screen woke, and the notification could not be swiped away. Ringing for up to 5 minutes with no reachable stop. That is the defect being fixed here.</div>
+
+<h2>Variant A — dedicated full-screen alarm activity (recommended)</h2>
+<p class="note">A real alarm screen, like a clock app: shows over the lock screen, turns the screen on, and the buttons are the whole point of the screen.</p>
+<div class="lock">
+  <div class="now">05:16</div><div class="dt">Thu, 17 Sep</div>
+  <div class="box">
+    <div class="ico">🌅</div>
+    <div class="ttl">Sunrise in 10 min</div>
+    <div class="sub">05:26 · Kolkata</div>
+    <div class="sub">বৃহস্পতিবার, ৩১ ভাদ্র ১৪৩৩</div>
+    <button class="big stop">STOP</button>
+    <button class="big snz">Snooze 5 min</button>
+  </div>
+</div>
+<table>
+<tr><th>#</th><th>Behaviour</th></tr>
+<tr><td>1</td><td>STOP is the largest control, thumb-reachable, single tap — stops sound + vibration + clears the notification immediately</td></tr>
+<tr><td>2</td><td>Also stops on: hardware <b>volume</b> key, <b>power</b> button, or back gesture (any of them = STOP — never leaves it ringing)</td></tr>
+<tr><td>3</td><td>Shows over the lock screen without unlocking (setShowWhenLocked + setTurnScreenOn); no PIN needed to silence it</td></tr>
+<tr><td>4</td><td>Notification keeps a Dismiss action too, now with a real icon, as the fallback path</td></tr>
+<tr><td>5</td><td>Ring cap drops from 5 min to <b>60 s</b> — an unattended alarm can never embarrass you for long</td></tr>
+</table>
+
+<h2>Variant B — compact popup dialog over whatever is on screen</h2>
+<div class="card"><b>🌅 Sunrise in 10 min · 05:26</b>
+<div class="actbar"><span class="act red">STOP</span><span class="act">Snooze 5</span></div>
+<div class="note" style="margin:6px 0 0">Alert-dialog style; cannot appear over the lock screen on modern Android, so a locked phone would still ring with no visible control. Offered for completeness only.</div></div>
+
+<h2>Snooze — how it will work (needs its own key, which is why v1.20 omitted it)</h2>
+<table>
+<tr><th>#</th><th>Rule</th></tr>
+<tr><td>1</td><td>Snooze re-arms the SAME event at now + N minutes using dedicated slot codes 10–13 (sunrise/sunset/moonrise/moonset snooze), so the K64 fired-ledger key for the original slot is untouched</td></tr>
+<tr><td>2</td><td>Ledger key for a snooze becomes "code@date#seq" so repeated snoozes on the same day are each allowed, while genuine duplicate deliveries are still suppressed</td></tr>
+<tr><td>3</td><td>Snooze length: 5 / 10 / 15 min — chosen in the alarm sheet, default 5; snooze never survives past midnight</td></tr>
+<tr><td>4</td><td>Max 3 consecutive snoozes, then it stops for the day (logged) — no infinite chain</td></tr>
+</table>
+
+<h2>Immediate-safety rules (both variants)</h2>
+<table>
+<tr><th>#</th><th>Rule</th></tr>
+<tr><td>1</td><td>Volume-key press silences instantly, even before the screen is read</td></tr>
+<tr><td>2</td><td>Ring cap 60 s (was 300 s)</td></tr>
+<tr><td>3</td><td>Vibration cancels with the sound, always — no orphan buzzing</td></tr>
+<tr><td>4</td><td>If the alarm screen cannot launch for any reason, the notification falls back to a heads-up WITH a full-size Dismiss button and the cap still applies</td></tr>
+<tr><td>5</td><td>Companions: STOP path unit-tested (service stop + notification cancel + vibrator cancel), snooze key vectors, cap constant test</td></tr>
+</table>
+<div class="rec">✔ Recommended: Variant A + volume/power-key stop + 60 s cap + snooze on codes 10–13 with sequence-keyed ledger.</div>
+
+<h2>Blocker questions</h2>
+<table>
+<tr><th>#</th><th>Question</th><th>Recommendation</th></tr>
+<tr><td>1</td><td>Variant A (full-screen alarm activity) or B (dialog)?</td><td>A</td></tr>
+<tr><td>2</td><td>Include Snooze now, or STOP only?</td><td>Include Snooze (5/10/15, max 3)</td></tr>
+<tr><td>3</td><td>Ring cap: 60 s?</td><td>Yes — 60 s</td></tr>
+</table>
+</body></html>

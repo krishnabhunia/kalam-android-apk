@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<title>Kalam design 1.4.D1 — Place-of-birth disambiguation (K48)</title>
+<style>
+  body{font-family:'Segoe UI',Roboto,sans-serif;background:#ECEFF4;margin:0;padding:24px;color:#111}
+  h1{font-size:20px;margin:0 0 4px}
+  .sub{color:#555;font-size:13px;margin-bottom:20px}
+  .row{display:flex;flex-wrap:wrap;gap:22px;align-items:flex-start}
+  .frame{width:360px;background:#FFF;border:1px solid #C9CFDA;border-radius:18px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,.07)}
+  .cap{font-size:12.5px;font-weight:600;color:#123472;margin:0 0 10px;text-transform:uppercase;letter-spacing:.4px}
+  .box{border:1px solid #C9CFDA;border-radius:12px;padding:12px;font-size:13px}
+  .fld{border:1px solid #C9CFDA;border-radius:9px;padding:9px 10px;margin-top:8px;color:#333;position:relative}
+  .fl{position:absolute;top:-8px;left:8px;background:#FFF;padding:0 4px;font-size:11px;color:#1A3E8C}
+  .resline{display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:12.5px}
+  .res{color:#0F6E56}
+  .fail{color:#8A6D00}
+  .rbtn{color:#1A3E8C;font-weight:600}
+  .dlg{border:1px solid #C9CFDA;border-radius:14px;box-shadow:0 6px 18px rgba(0,0,0,.14);padding:14px;font-size:13px;background:#FFF}
+  .dt{font-weight:700;font-size:14.5px;margin-bottom:2px}
+  .ds{color:#666;font-size:12px;margin-bottom:8px}
+  .cand{border:1px solid #C9CFDA;border-radius:10px;padding:9px 10px;margin-top:7px}
+  .cand b{display:block}
+  .cand span{color:#666;font-size:12px}
+  .cand.pick{border-color:#1A3E8C;background:rgba(26,62,140,.07)}
+  .dact{display:flex;justify-content:flex-end;gap:16px;margin-top:12px;font-weight:600;color:#1A3E8C}
+  .note{font-size:11.5px;color:#666;margin-top:8px}
+</style></head><body>
+<h1>Kalam 1.4.D1 — K48 · same-name place disambiguation</h1>
+<div class="sub">Girl form Resolve only · manual lat/lon stays the final escape hatch</div>
+<div class="row">
+
+  <div class="frame">
+    <div class="cap">Single candidate · human-readable resolve</div>
+    <div class="box">
+      <div class="fld"><span class="fl">Place of birth</span>Kalyan</div>
+      <div class="resline"><span class="res">Resolved: Kalyan, Maharashtra, IN · 19.2403, 73.1305</span><span class="rbtn">Resolve</span></div>
+    </div>
+    <div class="note">One hit resolves silently as today — but the label now names locality · state · country, so a wrong-state pick is visible at a glance instead of hiding behind raw coordinates.</div>
+  </div>
+
+  <div class="frame">
+    <div class="cap">Two+ candidates · picker dialog</div>
+    <div class="dlg">
+      <div class="dt">Choose place of birth</div>
+      <div class="ds">"Bijapur" matches 2 places</div>
+      <div class="cand pick"><b>Bijapur · Karnataka · IN</b><span>16.8302, 75.7100</span></div>
+      <div class="cand"><b>Bijapur · Chhattisgarh · IN</b><span>18.7900, 80.8200</span></div>
+      <div class="dact"><span style="color:#888">Cancel</span></div>
+    </div>
+    <div class="note">Tap a row to pick — the form resolves to that place. Cancel leaves the field unresolved (prior state kept). Candidates deduped at 4 decimals; missing state/country degrades to a name-only row.</div>
+  </div>
+
+  <div class="frame">
+    <div class="cap">After pick · and the unchanged zero-match path</div>
+    <div class="box">
+      <div class="fld"><span class="fl">Place of birth</span>Bijapur</div>
+      <div class="resline"><span class="res">Resolved: Bijapur, Chhattisgarh, IN · 18.7900, 80.8200</span><span class="rbtn">Resolve</span></div>
+    </div>
+    <div style="height:10px"></div>
+    <div class="box">
+      <div class="fld"><span class="fl">Place of birth</span>Xqzptown</div>
+      <div class="resline"><span class="fail">Lookup failed — enter coordinates manually</span><span class="rbtn">Resolve</span></div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <div class="fld" style="flex:1;margin-top:0"><span class="fl">Lat</span>—</div>
+        <div class="fld" style="flex:1;margin-top:0"><span class="fl">Lon</span>—</div>
+      </div>
+    </div>
+    <div class="note">Zero matches → the existing manual path, untouched.</div>
+  </div>
+
+</div>
+</body></html>

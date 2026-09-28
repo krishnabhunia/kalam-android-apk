@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<title>Kalam design 1.13.D1 — Clock sorting, grouping, Bengali date (K65–K67)</title>
+<style>
+  body{font-family:'Segoe UI',Roboto,sans-serif;background:#ECEFF4;margin:0;padding:24px;color:#111}
+  h1{font-size:20px;margin:0 0 4px}
+  .sub{color:#555;font-size:13px;margin-bottom:20px}
+  .row{display:flex;flex-wrap:wrap;gap:22px;align-items:flex-start}
+  .frame{width:372px;background:#FFF;border:1px solid #C9CFDA;border-radius:18px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,.07)}
+  .cap{font-size:12.5px;font-weight:600;color:#123472;margin:0 0 10px;text-transform:uppercase;letter-spacing:.4px}
+  .ctl{display:flex;gap:8px;margin-bottom:10px}
+  .chipc{border:1px solid #1A3E8C;color:#1A3E8C;border-radius:999px;padding:4px 12px;font-size:12px;font-weight:600}
+  .chip{border:1px solid #C9CFDA;border-radius:14px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:8px;font-size:13px}
+  .chev{color:#1A3E8C;font-weight:700}
+  .temp{color:#993C1D;font-weight:700}
+  .gh2{font-size:12px;font-weight:700;color:#123472;background:#E9EEF9;border:1px solid #C9CFDA;border-radius:9px;padding:5px 10px;margin:6px 0}
+  .dd{border:1px solid #C9CFDA;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,.14);padding:8px;font-size:13px;background:#FFF;margin-top:8px}
+  .ddr{display:flex;justify-content:space-between;padding:7px 8px;border-radius:8px}
+  .ddr.on{background:rgba(26,62,140,.08);font-weight:700;color:#1A3E8C}
+  .ddr span:last-child{color:#666;font-size:11px}
+  .hdr{text-align:center;margin-bottom:8px}
+  .hdr .g{font-weight:700;font-size:16px}
+  .hdr .b{color:#8A6D00;font-size:13.5px;margin-top:2px}
+  .kv{border:1px solid #C9CFDA;border-radius:12px;overflow:hidden;font-size:12.5px}
+  .kvh{display:flex;background:#E9EEF9;color:#123472;font-weight:600;padding:6px}
+  .kvr{display:flex;padding:6px;border-top:1px solid #EEF1F6;align-items:center}
+  .c1{flex:0 0 24%;text-align:center}.c2{flex:0 0 13%;text-align:center}.c3{flex:0 0 37%;text-align:center;font-weight:600}.c4{flex:0 0 26%;text-align:center;font-weight:600}
+  .bn{display:block;color:#8A6D00;font-size:11px}
+  .today{color:#1A3E8C;font-weight:700;font-size:11px}
+  .note{font-size:11.5px;color:#666;margin-top:8px}
+</style></head><body>
+<h1>Kalam 1.13.D1 — sort · group · Bengali date</h1>
+<div class="sub">K65 + K66 + K67 · Bengali strings below are ILLUSTRATIVE — golden-vectored at build</div>
+<div class="row">
+
+  <div class="frame">
+    <div class="cap">K65 — sort control + assessed modes</div>
+    <div class="ctl"><span class="chipc">Sort: Time ▾</span><span class="chipc" style="border-color:#C9CFDA;color:#666">Group: None ▾</span></div>
+    <div class="chip"><span class="chev">▸</span><span><b>London</b> <span class="temp">19°</span> 1210 hrs</span></div>
+    <div class="chip"><span class="chev">▸</span><span><b>Zürich</b> <span class="temp">21°</span> 1310 hrs</span></div>
+    <div class="chip"><span class="chev">▸</span><span><b>Dubai</b> <span class="temp">38°</span> 1510 hrs</span></div>
+    <div class="chip"><span class="chev">▸</span><span><b>Mumbai</b> <span class="temp">31°</span> 1640 hrs</span></div>
+    <div class="dd">
+      <div class="ddr">Added<span>your order (default)</span></div>
+      <div class="ddr">Name A–Z<span>find by name</span></div>
+      <div class="ddr on">Time<span>west → east, classic world clock</span></div>
+      <div class="ddr">Country<span>India first · K49 law</span></div>
+    </div>
+    <div class="note">Four modes, persisted. Temperature sort assessed and REJECTED — readings go stale/absent, order would jump. Ties keep your added order.</div>
+  </div>
+
+  <div class="frame">
+    <div class="cap">K66 — grouped: Country / Continent</div>
+    <div class="ctl"><span class="chipc" style="border-color:#C9CFDA;color:#666">Sort: Name ▾</span><span class="chipc">Group: Country ▾</span></div>
+    <div class="gh2">India (2)</div>
+    <div class="chip"><span class="chev">▸</span><span><b>Kolkata</b> <span class="temp">31°</span> 1640 hrs</span></div>
+    <div class="chip"><span class="chev">▸</span><span><b>Mumbai</b> <span class="temp">31°</span> 1640 hrs</span></div>
+    <div class="gh2">Switzerland (1)</div>
+    <div class="chip"><span class="chev">▸</span><span><b>Zürich</b> <span class="temp">21°</span> 1310 hrs</span></div>
+    <div class="gh2">Other (1)</div>
+    <div class="chip"><span class="chev">▸</span><span><b>Bajkul</b> 1640 hrs</span></div>
+    <div class="note">Country = from each clock's stored region; India group always first, rest ascending. <b>Continent</b> mode derives from the IANA zone (Asia/ → Asia, America/ → Americas…) — fully offline. Saved places carry no country → honest <b>Other</b> bucket. Sort works inside groups.</div>
+  </div>
+
+  <div class="frame">
+    <div class="cap">K67 — Day tab · Bengali date row</div>
+    <div class="hdr">
+      <div class="g">Tue, 11 Aug 2026</div>
+      <div class="b">মঙ্গলবার, ২৫ শ্রাবণ ১৪৩৩</div>
+    </div>
+    <div class="note" style="margin-bottom:10px">Bengali line under the Gregorian date — Bengali script + numerals. Value shown is illustrative; the build ships only after golden vectors match drikpanchang.</div>
+    <div class="cap">K67 — Week tab · stacked under Date</div>
+    <div class="kv">
+      <div class="kvh"><div class="c1">Date</div><div class="c2">Day</div><div class="c3">Time</div><div class="c4">Duration</div></div>
+      <div class="kvr"><div class="c1">11 Aug<span class="bn">২৫ শ্রাবণ</span><span class="today">today</span></div><div class="c2">Tue</div><div class="c3">04:59 – 06:34</div><div class="c4">1h 35m</div></div>
+      <div class="kvr"><div class="c1">12 Aug<span class="bn">২৬ শ্রাবণ</span></div><div class="c2">Wed</div><div class="c3">04:59 – 06:34</div><div class="c4">1h 35m</div></div>
+    </div>
+    <div class="note">Each week row: Bengali day+month stacked under the Gregorian date (year omitted for width), same wrap-not-clip rules.</div>
+  </div>
+
+</div>
+</body></html>

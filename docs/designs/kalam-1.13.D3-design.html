@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<title>Kalam design 1.13.D3 — Tithi in the Day header (K68)</title>
+<style>
+  body{font-family:'Segoe UI',Roboto,sans-serif;background:#ECEFF4;margin:0;padding:24px;color:#111}
+  h1{font-size:20px;margin:0 0 4px}
+  .sub{color:#555;font-size:13px;margin-bottom:20px}
+  .row{display:flex;flex-wrap:wrap;gap:22px;align-items:flex-start}
+  .frame{width:372px;background:#FFF;border:1px solid #C9CFDA;border-radius:18px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,.07)}
+  .cap{font-size:12.5px;font-weight:600;color:#123472;margin:0 0 10px;text-transform:uppercase;letter-spacing:.4px}
+  .hdr{text-align:center;margin-bottom:10px}
+  .hdr .g{font-weight:700;font-size:16px}
+  .hdr .b{color:#8A6D00;font-size:13.5px;margin-top:2px}
+  .hdr .e{color:#666;font-size:11.5px;font-style:italic;margin-top:1px}
+  .hdr .tb{color:#123472;font-size:13px;margin-top:6px;font-weight:600}
+  .hdr .te{color:#666;font-size:11.5px;font-style:italic}
+  .mini{border:1px solid #E4E8F0;border-radius:10px;overflow:hidden;font-size:12.5px}
+  .mh{display:flex;background:#E9EEF9;color:#123472;font-weight:600;padding:5px 6px}
+  .mr{display:flex;padding:5px 6px;border-top:1px solid #E4E8F0}
+  .m1{flex:0 0 20%;text-align:center;font-weight:600}
+  .m2{flex:0 0 25%;text-align:center}
+  .m3{flex:0 0 25%;text-align:center}
+  .m4{flex:0 0 30%;text-align:center;font-weight:600}
+  .note{font-size:11.5px;color:#666;margin-top:8px}
+</style></head><body>
+<h1>Kalam 1.13.D3 — K68 · Tithi joins the date header</h1>
+<div class="sub">Values ILLUSTRATIVE — ships only after drikpanchang golden vectors (K67 gate shared)</div>
+<div class="row">
+
+  <div class="frame">
+    <div class="cap">Day tab — full header stack + sky table</div>
+    <div class="hdr">
+      <div class="g">Tue, 11 Aug 2026</div>
+      <div class="b">মঙ্গলবার, ২৫ শ্রাবণ ১৪৩৩</div>
+      <div class="e">Tuesday, 25 Srabon 1433</div>
+      <div class="tb">কৃষ্ণপক্ষ চতুর্দশী · ১৫:০৭ পর্যন্ত</div>
+      <div class="te">Krishna Chaturdashi · upto 15:07</div>
+    </div>
+    <div class="mini">
+      <div class="mh"><div class="m1"></div><div class="m2">Rise</div><div class="m3">Set</div><div class="m4">Duration</div></div>
+      <div class="mr"><div class="m1">Sun</div><div class="m2">05:14</div><div class="m3">18:15</div><div class="m4">13h 01m</div></div>
+      <div class="mr" style="background:rgba(0,0,0,.04)"><div class="m1">Moon</div><div class="m2">03:58</div><div class="m3">17:10</div><div class="m4">13h 12m</div></div>
+    </div>
+    <div class="note"><b>Why here:</b> tithi is the day's panchang identity — it sits with the calendar facts (Gregorian → Bengali → tithi), keeping the sky table purely observational. Blue = tithi pair, gold = Bengali date, matching the app's red-blue scheme. Rule: the tithi at <b>sunrise</b> names the day; "upto 15:07" is when it ends (a tithi running past next sunrise gets no upto). Kshaya/vriddhi days show the sunrise tithi honestly — the upto time reveals any mid-day change. Derived from the existing lunar engine; a computation failure hides the lines rather than ever showing a wrong tithi.</div>
+  </div>
+
+</div>
+</body></html>

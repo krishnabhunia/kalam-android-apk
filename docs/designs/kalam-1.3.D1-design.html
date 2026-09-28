@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<title>Kalam design 1.3.D1 — Sky stacked labels + Week justified (K42, K43)</title>
+<style>
+  body{font-family:'Segoe UI',Roboto,sans-serif;background:#ECEFF4;margin:0;padding:24px;color:#111}
+  h1{font-size:20px;margin:0 0 4px}
+  .sub{color:#555;font-size:13px;margin-bottom:20px}
+  .row{display:flex;flex-wrap:wrap;gap:22px;align-items:flex-start}
+  .frame{width:360px;background:#FFF;border:1px solid #C9CFDA;border-radius:18px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,.07)}
+  .cap{font-size:12.5px;font-weight:600;color:#123472;margin:0 0 10px;text-transform:uppercase;letter-spacing:.4px}
+  .tbl{border:1px solid #C9CFDA;border-radius:12px;overflow:hidden;font-size:13px}
+  .thead{background:#E9EEF9;color:#123472;font-weight:600;display:flex;padding:8px}
+  .tr{display:flex;padding:8px;border-top:1px solid #E4E8F0;align-items:flex-start}
+  .zeb{background:rgba(0,0,0,.04)}
+  .k1{flex:1.15}.k2{flex:1}.k3{flex:1}.k4{flex:1;font-weight:600}
+  .lbl{font-weight:600}
+  .subl{font-size:11.5px;color:#666;line-height:1.35;margin-top:2px}
+  .selRK{background:#993C1D;color:#FFF;padding:7px 8px;text-align:center;font-weight:700;font-size:13.5px}
+  .bandRK{background:#FAECE7;color:#4A1B0C;display:flex;padding:8px;font-weight:600}
+  .wq{flex:1;padding-right:6px}
+  .wq:last-child{padding-right:0}
+  .today{background:rgba(26,62,140,.10)}
+  .todaytag{font-size:11px;color:#1A3E8C;font-weight:600;margin-top:1px}
+  .past{color:#888}
+  .dur2{line-height:1.3}
+  .note{font-size:11.5px;color:#666;margin-top:8px}
+</style></head><body>
+<h1>Kalam 1.3.D1 — Sky stacked labels · Week justified columns</h1>
+<div class="sub">K42 + K43 · wrap replaces truncation · Kolkata, Mon 10 Aug 2026</div>
+<div class="row">
+
+  <div class="frame">
+    <div class="cap">K42 — Day sky table · labels stacked, info column removed</div>
+    <div class="tbl">
+      <div class="thead"><div class="k1"></div><div class="k2">Rise</div><div class="k3">Set</div><div class="k4">Dur</div></div>
+      <div class="tr" style="border-top:none">
+        <div class="k1"><div class="lbl">Sun</div><div class="subl">geometric</div></div>
+        <div class="k2">05:14</div><div class="k3">18:16</div><div class="k4">13h 02m</div>
+      </div>
+      <div class="tr zeb">
+        <div class="k1"><div class="lbl">Moon</div><div class="subl">🌘 waning crescent 12%</div></div>
+        <div class="k2">03:05</div><div class="k3">16:20</div><div class="k4">13h 15m</div>
+      </div>
+    </div>
+    <div style="height:10px"></div>
+    <div class="tbl">
+      <div class="thead"><div class="k1"></div><div class="k2">Rise</div><div class="k3">Set</div><div class="k4">Dur</div></div>
+      <div class="tr" style="border-top:none">
+        <div class="k1"><div class="lbl">Sun</div><div class="subl">observational</div></div>
+        <div class="k2">05:12</div><div class="k3">18:18</div><div class="k4">13h 06m</div>
+      </div>
+      <div class="tr zeb">
+        <div class="k1"><div class="lbl">Moon</div><div class="subl">🌔 waxing gibbous 74%</div></div>
+        <div class="k2">14:03</div><div class="k3">—</div><div class="k4">9h 57m</div>
+      </div>
+    </div>
+    <div class="note">Convention sits under Sun; phase under Moon, wrapping to two lines ("waning crescent 12%") instead of squeezing a trailing column. Rise/Set/Dur gain the freed width.</div>
+  </div>
+
+  <div class="frame">
+    <div class="cap">K43 — Week · justified quarters · variant A</div>
+    <div class="tbl">
+      <div class="selRK">Rahu Kalam</div>
+      <div class="bandRK"><div class="wq">Date</div><div class="wq">Day</div><div class="wq">Time</div><div class="wq">Duration</div></div>
+      <div class="tr today" style="border-top:none"><div class="wq">10 Aug<div class="todaytag">today</div></div><div class="wq">Mon</div><div class="wq">06:52 – 08:29</div><div class="wq" style="font-weight:600">97 mins</div></div>
+      <div class="tr zeb"><div class="wq">11 Aug</div><div class="wq">Tue</div><div class="wq">15:00 – 16:37</div><div class="wq" style="font-weight:600">97 mins</div></div>
+      <div class="tr"><div class="wq">12 Aug</div><div class="wq">Wed</div><div class="wq">11:44 – 13:21</div><div class="wq" style="font-weight:600">97 mins</div></div>
+      <div class="tr zeb"><div class="wq">13 Aug</div><div class="wq">Thu</div><div class="wq">13:21 – 14:58</div><div class="wq" style="font-weight:600">97 mins</div></div>
+      <div class="tr"><div class="wq">14 Aug</div><div class="wq">Fri</div><div class="wq">10:06 – 11:43</div><div class="wq" style="font-weight:600">97 mins</div></div>
+      <div class="tr zeb"><div class="wq">15 Aug</div><div class="wq">Sat</div><div class="wq">08:28 – 10:05</div><div class="wq" style="font-weight:600">96 mins</div></div>
+      <div class="tr"><div class="wq">16 Aug</div><div class="wq">Sun</div><div class="wq">16:35 – 18:11</div><div class="wq" style="font-weight:600">96 mins</div></div>
+    </div>
+    <div class="note">Four equal columns edge-to-edge, all left-aligned on a shared grid. "today" drops to its own line under the date (small, blue).</div>
+  </div>
+
+  <div class="frame">
+    <div class="cap">K43 — variant B · wrap, never clip</div>
+    <div class="tbl">
+      <div class="selRK">Rahu Kalam</div>
+      <div class="bandRK"><div class="wq">Date</div><div class="wq">Day</div><div class="wq">Time</div><div class="wq">Duration</div></div>
+      <div class="tr today" style="border-top:none"><div class="wq">10 Aug<div class="todaytag">today</div></div><div class="wq">Mon</div><div class="wq">06:52 – 08:29</div><div class="wq dur2" style="font-weight:600">1 hour<br>37 mins</div></div>
+      <div class="tr zeb"><div class="wq">11 Aug</div><div class="wq">Tue</div><div class="wq">15:00 – 16:37</div><div class="wq dur2" style="font-weight:600">1 hour<br>37 mins</div></div>
+      <div class="tr"><div class="wq">12 Aug</div><div class="wq">Wed</div><div class="wq">11:44 – 13:21</div><div class="wq dur2" style="font-weight:600">1 hour<br>37 mins</div></div>
+      <div class="tr zeb"><div class="wq">15 Aug</div><div class="wq">Sat</div><div class="wq">08:28 – 10:05</div><div class="wq dur2" style="font-weight:600">1 hour<br>36 mins</div></div>
+    </div>
+    <div class="note">Hours form wraps naturally at the word break; rows grow taller instead of any column clipping. The old Date-ellipsis rule is retired.</div>
+  </div>
+
+</div>
+</body></html>

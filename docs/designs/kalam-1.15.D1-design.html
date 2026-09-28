@@ -1,0 +1,89 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kalam 1.15.D1 — K71 group collapse · K72 rename · K73 card trim</title><style>
+body{font-family:Roboto,system-ui,sans-serif;background:#F6F3EE;margin:0;padding:18px;color:#1C1B1F}
+h1{font-size:20px;margin:0 0 4px} h2{font-size:16px;margin:24px 0 8px;color:#123472}
+.note{font-size:13px;color:#5F5C57;margin:0 0 12px}
+.phone{width:390px;background:#FFFBF4;border:1px solid #D8D2C6;border-radius:22px;padding:14px;margin:10px 0}
+.hdr{background:#E9EEF9;color:#123472;font-weight:600;border-radius:9px;padding:6px 11px;font-size:13.5px;margin:8px 0 4px;display:flex;justify-content:space-between;cursor:pointer}
+.card{border:1px solid #D8D2C6;border-radius:14px;padding:11px 14px;margin:8px 0;background:#fff}
+.row{display:flex;justify-content:space-between;align-items:baseline}
+.city{font-weight:600;font-size:16px}.reg{font-size:12px;color:#5F5C57}
+.time{font-size:24px;font-weight:600;color:#123472}
+.strip{font-size:12.5px;margin-top:6px;color:#3C3A36}
+.aqi{display:inline-block;padding:0 8px;border-radius:999px;font-weight:600;font-size:12px;background:#FFF3C4;color:#7A5C00;border:1px solid #E0C34D}
+.sun{font-size:12.5px;color:#5F5C57;margin-top:6px}
+.upd{font-size:11px;color:#C98F7A}
+.pencil{float:right;font-size:14px}
+.dlg{border:2px solid #123472;border-radius:12px;background:#fff;padding:12px;width:280px;margin:8px 0;font-size:13.5px}
+.dlg input{width:95%;border:1px solid #C9C2B4;border-radius:7px;padding:6px;font-size:14px;margin:7px 0}
+.btn{display:inline-block;border-radius:8px;padding:4px 14px;font-size:13px;margin-right:8px}
+.p{background:#123472;color:#fff}.s{border:1px solid #C9C2B4}
+.rec{background:#E1F5EE;color:#04342C;border:1px solid #0F6E56;border-radius:10px;padding:8px 12px;font-size:13px;margin:8px 0}
+table{border-collapse:collapse;font-size:13px;margin:8px 0}td,th{border:1px solid #C9C2B4;padding:5px 9px;text-align:left}th{background:#EFE9DD}
+.old{opacity:.55}
+.h{color:#C00000;font-weight:600}
+</style></head><body>
+<h1>1.15.D1 — Clocks: collapsible groups · rename city · compact cards</h1>
+<p class="note">Three queued items, one round. K73's compact strip intentionally supersedes the K70 grid so every card keeps “normal” height.</p>
+
+<h2>K71 — Collapsible groups (tap the group header)</h2>
+<div class="phone">
+<div class="hdr"><span>▾ India (2)</span><span class="reg">tap to collapse</span></div>
+<div class="card"><div class="row"><div><span class="city">Kolkata</span> <span class="upd">31°</span></div><div class="time">14:22</div></div></div>
+<div class="card"><div class="row"><div><span class="city">Mumbai</span> <span class="upd">29°</span></div><div class="time">14:22</div></div></div>
+<div class="hdr"><span>▸ Switzerland (1)</span><span class="reg">collapsed — cards hidden</span></div>
+<div class="hdr"><span>▸ Other (1)</span><span class="reg">collapsed</span></div>
+</div>
+<table>
+<tr><th>#</th><th>Behaviour</th></tr>
+<tr><td>1</td><td>Chevron ▾/▸ + count on every header; whole header is the tap target</td></tr>
+<tr><td>2</td><td>Collapsed set persisted (Settings field 41, key list) — survives restart; keys are group names, so switching Country↔Continent keeps each mode's memory harmlessly</td></tr>
+<tr><td>3</td><td>Default expanded; per-card K53 expand/collapse untouched</td></tr>
+</table>
+
+<h2>K72 — Rename a clock (alias, original never lost)</h2>
+<div class="phone">
+<div class="card"><div class="row"><div><span class="city">Home 🏠</span><div class="reg">Kolkata · West Bengal · India</div></div>
+<div><div class="time">14:22</div></div></div>
+<div class="reg" style="margin-top:3px">expanded card: ✏️ beside 🗑 — tap opens ↓</div></div>
+<div class="dlg"><b>Rename clock</b><br><input value="Home"><br>
+<span class="reg">Blank restores “Kolkata”. Original name stays on the second line.</span><br>
+<span class="btn p">Save</span><span class="btn s">Cancel</span></div>
+</div>
+<table>
+<tr><th>#</th><th>Rule</th></tr>
+<tr><td>1</td><td>New <b>alias</b> field on ClockPlace (row field 7, tolerant decode — old rows unaffected)</td></tr>
+<tr><td>2</td><td>Alias shown as the card title; original city joins the region line (“Kolkata · West Bengal · India”)</td></tr>
+<tr><td>3</td><td>Name sort (K65) and search use the DISPLAYED name; country/continent grouping unaffected (region-based)</td></tr>
+<tr><td>4</td><td>Blank alias ⇒ back to original; ✏️ lives in the expanded card next to 🗑</td></tr>
+</table>
+
+<h2>K73 — Compact expanded card (the trim)</h2>
+<div class="phone">
+<div class="card old"><div class="reg">BEFORE (v1.15) — K70 grid, 2 label rows + 2 value rows:</div>
+<div class="row"><div><span class="city">Kolkata</span> <span class="upd">31° · Updated 12 min ago</span></div><div class="time">14:22</div></div>
+<div class="strip">Humidity&nbsp;&nbsp;&nbsp;&nbsp;Wind<br><b>74%</b>&nbsp;&nbsp;&nbsp;&nbsp;<b>12 km/h</b><br>Precipitation&nbsp;&nbsp;&nbsp;&nbsp;Air quality<br><b>0.4 mm</b>&nbsp;&nbsp;&nbsp;&nbsp;<span class="aqi">AQI 132 · Sensitive</span></div>
+<div class="sun">☀ 05:24 – 17:48 · 12h 24m<br>☾ 03:11 – 16:40 · 13h 29m</div></div>
+
+<div class="card"><div class="reg">AFTER — one metrics strip, ~2 rows saved:</div>
+<div class="row"><div><span class="city">Kolkata</span> <span class="upd">31° · Updated 12 min ago</span></div><div class="time">14:22</div></div>
+<div class="strip">💧 <b>74%</b> · 🌬 <b>12 km/h</b> · ☔ <b>0.4 mm</b> · <span class="aqi">AQI 132</span></div>
+<div class="sun">☀ 05:24 – 17:48 · 12h 24m &nbsp; ☾ 03:11 – 16:40 · 13h 29m</div></div>
+</div>
+<table>
+<tr><th>#</th><th>Trim rule</th></tr>
+<tr><td>1</td><td>2×2 grid → single strip: 💧 hum · 🌬 wind · ☔ precip · AQI chip (band label dropped from the chip; full band on long-press toast)</td></tr>
+<tr><td>2</td><td>☔ shown <span class="h">only when precip &gt; 0</span> — dry days save more width</td></tr>
+<tr><td>3</td><td>Sun and moon lines join into one line when both fit (else wrap naturally)</td></tr>
+<tr><td>4</td><td>Applied ALWAYS (uniform card heights), not conditionally — no jumpy decks</td></tr>
+</table>
+<div class="rec">✔ Recommended set: K71 persisted collapse · K72 alias-with-original-visible · K73 always-compact strip (supersedes the K70 grid).</div>
+
+<h2>Blocker questions</h2>
+<table>
+<tr><th>#</th><th>Question</th><th>Recommendation</th></tr>
+<tr><td>1</td><td>K71: persist collapsed groups across restarts?</td><td>Yes (Settings field 41)</td></tr>
+<tr><td>2</td><td>K72: rename entry point — ✏️ in expanded card, or long-press anywhere on the card?</td><td>✏️ icon (discoverable, no gesture conflict with K53 tap-to-expand)</td></tr>
+<tr><td>3</td><td>K73: compact strip always, or only when the card would overflow?</td><td>Always — uniform deck</td></tr>
+</table>
+</body></html>

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<title>Kalam design 1.8.D1 — Temperature beside city name (K54)</title>
+<style>
+  body{font-family:'Segoe UI',Roboto,sans-serif;background:#ECEFF4;margin:0;padding:24px;color:#111}
+  h1{font-size:20px;margin:0 0 4px}
+  .sub{color:#555;font-size:13px;margin-bottom:20px}
+  .row{display:flex;flex-wrap:wrap;gap:22px;align-items:flex-start}
+  .frame{width:372px;background:#FFF;border:1px solid #C9CFDA;border-radius:18px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,.07)}
+  .cap{font-size:12.5px;font-weight:600;color:#123472;margin:0 0 10px;text-transform:uppercase;letter-spacing:.4px}
+  .chip{border:1px solid #C9CFDA;border-radius:14px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+  .chev{color:#1A3E8C;font-weight:700}
+  .cline{font-size:13px;display:flex;flex-wrap:wrap;gap:0 8px;align-items:baseline}
+  .cname{font-weight:700;font-size:14px}
+  .temp{color:#993C1D;font-weight:700}
+  .temp.stale{color:#AAB2C0}
+  .ctime{color:#1A3E8C;font-weight:700}
+  .cdim{color:#444}
+  .clk{border:1px solid #C9CFDA;border-radius:14px;padding:11px 12px;margin-bottom:8px}
+  .ch{display:flex;justify-content:space-between;align-items:flex-start}
+  .cn{font-weight:700;font-size:14.5px}
+  .cr{font-size:11.5px;color:#666}
+  .del{color:#993C1D;font-size:13px}
+  .ct{display:flex;align-items:baseline;gap:8px;margin:3px 0 6px}
+  .big{font-size:24px;font-weight:700;color:#1A3E8C}
+  .cd{font-size:11.5px;color:#666}
+  .mini{border:1px solid #E4E8F0;border-radius:10px;overflow:hidden;font-size:12.5px}
+  .mh{display:flex;background:#E9EEF9;color:#123472;font-weight:600;padding:5px 6px}
+  .mr{display:flex;padding:5px 6px;border-top:1px solid #E4E8F0}
+  .zeb{background:rgba(0,0,0,.04)}
+  .m1{flex:0 0 20%;text-align:center;font-weight:600}
+  .m2{flex:0 0 25%;text-align:center}
+  .m3{flex:0 0 25%;text-align:center}
+  .m4{flex:0 0 30%;text-align:center;font-weight:600}
+  .note{font-size:11.5px;color:#666;margin-top:8px}
+</style></head><body>
+<h1>Kalam 1.8.D1 — K54 · temperature beside the city name</h1>
+<div class="sub">Open-Meteo current temperature · async fill, persisted last-known, honest absence</div>
+<div class="row">
+
+  <div class="frame">
+    <div class="cap">Collapsed chips · fresh, stale, absent</div>
+    <div class="chip"><span class="chev">▸</span>
+      <span class="cline"><span class="cname">Mumbai</span><span class="temp">31°</span><span class="ctime">1640 hrs</span><span class="cdim">0611–1911</span><span class="cdim">13h 00m</span></span>
+    </div>
+    <div class="chip"><span class="chev">▸</span>
+      <span class="cline"><span class="cname">Zürich</span><span class="temp stale">19°</span><span class="ctime">1310 hrs</span><span class="cdim">0613–2048</span><span class="cdim">14h 35m</span></span>
+    </div>
+    <div class="chip"><span class="chev">▸</span>
+      <span class="cline"><span class="cname">Tromsø</span><span class="ctime">1310 hrs</span><span class="cdim">1042–2201</span><span class="cdim">11h 19m</span></span>
+    </div>
+    <div class="note">Fresh = warm red "31°" right after the name. Dimmed grey = last-known, older than an hour. Absent (Tromsø) = never fetched / fetch failed — nothing fake shown. Rest of the chip unchanged from v1.8.</div>
+  </div>
+
+  <div class="frame">
+    <div class="cap">Expanded card · temp + updated caption</div>
+    <div class="clk">
+      <div class="ch"><div><span class="chev">▾</span> <span class="cn">Kolkata <span class="temp">31°</span></span> <span class="cr">West Bengal · Asia/Kolkata · updated 16:32</span></div><span class="del">🗑</span></div>
+      <div class="ct"><span class="big">16:40</span><span class="cd">Tue, 11 Aug · UTC+5:30</span></div>
+      <div class="mini">
+        <div class="mh"><div class="m1"></div><div class="m2">Rise</div><div class="m3">Set</div><div class="m4">Duration</div></div>
+        <div class="mr"><div class="m1">Sun</div><div class="m2">05:14</div><div class="m3">18:15</div><div class="m4">13h 01m</div></div>
+        <div class="mr zeb"><div class="m1">Moon</div><div class="m2">03:58</div><div class="m3">17:10</div><div class="m4">13h 12m</div></div>
+      </div>
+    </div>
+    <div class="note"><b>Mechanics:</b> on entering Clocks, only clocks with a reading older than 30 min refetch (≤10 tiny requests); cards paint instantly and temps fill in async; last-known values persist across relaunch. Timezone, sun, moon and the ticking time stay fully offline — the network now serves temperature only. °C.</div>
+  </div>
+
+</div>
+</body></html>

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<title>Kalam design 1.10.D1 — Settings group boxes + expandable About (K58)</title>
+<style>
+  body{font-family:'Segoe UI',Roboto,sans-serif;background:#ECEFF4;margin:0;padding:24px;color:#111}
+  h1{font-size:20px;margin:0 0 4px}
+  .sub{color:#555;font-size:13px;margin-bottom:20px}
+  .row{display:flex;flex-wrap:wrap;gap:22px;align-items:flex-start}
+  .frame{width:372px;background:#FFF;border:1px solid #C9CFDA;border-radius:18px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,.07)}
+  .cap{font-size:12.5px;font-weight:600;color:#123472;margin:0 0 10px;text-transform:uppercase;letter-spacing:.4px}
+  .bar{display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px;margin-bottom:10px}
+  .bar span:first-child{color:#1A3E8C}
+  .gb{border:1px solid #C9CFDA;border-radius:14px;margin-bottom:10px;overflow:hidden}
+  .gh{background:#E9EEF9;color:#123472;font-weight:700;font-size:13px;padding:8px 12px}
+  .gc{padding:10px 12px;font-size:13px}
+  .r{display:flex;justify-content:space-between;padding:6px 0;color:#333}
+  .r span:last-child{color:#666}
+  .seg{display:flex;border:1px solid #C9CFDA;border-radius:9px;overflow:hidden;margin:4px 0}
+  .seg div{flex:1;text-align:center;padding:6px 0;font-size:12px;color:#666}
+  .seg .on{background:#1A3E8C;color:#FFF;font-weight:600}
+  .nav{display:flex;justify-content:space-between;padding:6px 0;font-weight:600}
+  .nav span:last-child{color:#1A3E8C}
+  .abt{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;font-weight:700;font-size:13px;background:#E9EEF9;color:#123472}
+  .chev{color:#1A3E8C}
+  .abody{padding:10px 12px;font-size:13px}
+  .abody .l{color:#1A3E8C;text-decoration:underline}
+  .note{font-size:11.5px;color:#666;margin-top:8px}
+</style></head><body>
+<h1>Kalam 1.10.D1 — Settings: group boxes · Logs · expandable About</h1>
+<div class="sub">K58 · one scrolling page replaces the 5-tab deck bar · order locked: Display → Alerts → Location → Match → Logs → About</div>
+<div class="row">
+
+  <div class="frame">
+    <div class="cap">Frame 1 — page top (About collapsed)</div>
+    <div class="bar"><span>←</span><span>Settings</span></div>
+    <div class="gb"><div class="gh">Display</div><div class="gc">
+      <div class="r"><span>Font size</span></div>
+      <div class="seg"><div>Small</div><div class="on">Default</div><div>Large</div><div>Largest</div></div>
+      <div class="r"><span>Kalam duration</span><span>1h 30m · segmented</span></div>
+      <div class="r"><span>Conventions</span><span>Alarm · Week</span></div>
+    </div></div>
+    <div class="gb"><div class="gh">Alerts</div><div class="gc">
+      <div class="r"><span>Alarm rings at</span><span>Start of kalam</span></div>
+      <div class="r"><span>Ring for selected kalam</span><span>On</span></div>
+    </div></div>
+    <div class="gb"><div class="gh">Location</div><div class="gc">
+      <div class="r"><span>Active place</span><span>Bajkul</span></div>
+      <div class="nav"><span>Saved places</span><span>›</span></div>
+    </div></div>
+    <div class="gb"><div class="gh">Match</div><div class="gc">
+      <div class="nav"><span>My details</span><span>›</span></div>
+      <div class="nav"><span>API credentials</span><span>›</span></div>
+      <div class="nav"><span>Clear Match Details</span><span>›</span></div>
+    </div></div>
+    <div class="gb"><div class="gh">Logs</div><div class="gc">
+      <div class="nav"><span>Error logs</span><span>›</span></div>
+    </div></div>
+    <div class="gb"><div class="abt"><span>About</span><span class="chev">▸</span></div></div>
+    <div class="note">Every group is a titled box with its existing controls inline — the Display/Alerts/Location/Match/More tab bar retires ("More" dissolves into Logs + About). Same BackBar. Nothing removed, only regrouped.</div>
+  </div>
+
+  <div class="frame">
+    <div class="cap">Frame 2 — About expanded (last box)</div>
+    <div class="gb"><div class="gh">Logs</div><div class="gc">
+      <div class="nav"><span>Error logs</span><span>›</span></div>
+    </div></div>
+    <div class="gb">
+      <div class="abt"><span>About</span><span class="chev">▾</span></div>
+      <div class="abody">
+        <div style="font-weight:700">Kalam</div>
+        <div>Version 1.11 · 11-Aug-2026</div>
+        <div style="margin-top:6px">Krishna Dipayan Bhunia</div>
+        <div>Suggestion / Feedback / Bugs / Error → <span class="l">kri.subsc@gmail.com</span></div>
+        <div><span class="l">LinkedIn</span> · <span class="l">Facebook</span></div>
+        <div style="margin-top:6px;color:#666">Kundli matching uses Lahiri ayanamsa via Prokerala. Place lookup uses OpenStreetMap Nominatim.</div>
+      </div>
+    </div>
+    <div class="note">Tap the About header to expand/collapse (collapsed by default, ▸/▾). The standard block — version+date, contact links, credits — lives inline; the separate About screen retires. Links stay tappable. Expansion is session-only.</div>
+  </div>
+
+</div>
+</body></html>

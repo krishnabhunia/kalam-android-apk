@@ -1,0 +1,74 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kalam 1.14.D1 — K70 Clock weather metrics</title><style>
+body{font-family:Roboto,system-ui,sans-serif;background:#F6F3EE;margin:0;padding:18px;color:#1C1B1F}
+h1{font-size:20px;margin:0 0 4px} h2{font-size:16px;margin:22px 0 8px;color:#123472}
+.note{font-size:13px;color:#5F5C57;margin:0 0 14px}
+.phone{width:390px;background:#FFFBF4;border:1px solid #D8D2C6;border-radius:22px;padding:14px;margin:10px 0}
+.card{border:1px solid #D8D2C6;border-radius:14px;padding:12px 14px;margin:10px 0;background:#fff}
+.row{display:flex;justify-content:space-between;align-items:baseline}
+.city{font-weight:600;font-size:17px}.reg{font-size:12px;color:#5F5C57}
+.time{font-size:26px;font-weight:600}.dt{font-size:12px;color:#5F5C57;text-align:right}
+.temp{font-size:14px;font-weight:600;margin-top:2px}.upd{font-size:11px;color:#C98F7A}
+.metrics{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;margin-top:9px;padding-top:8px;border-top:1px dashed #E4DED2}
+.m{font-size:13px}.m b{font-weight:600}.lbl{color:#5F5C57;font-size:11px;display:block}
+.aqi{display:inline-block;padding:1px 9px;border-radius:999px;font-weight:600;font-size:12.5px}
+.aqi.mod{background:#FFF3C4;color:#7A5C00;border:1px solid #E0C34D}
+.aqi.usg{background:#FFE1C4;color:#8A4500;border:1px solid #E09A4D}
+.inline{font-size:12.5px;color:#3C3A36;margin-top:3px}
+.sun{font-size:12.5px;color:#5F5C57;margin-top:8px}
+.tag{display:inline-block;background:#E9EEF9;color:#123472;font-weight:600;border-radius:8px;padding:2px 8px;font-size:12px;margin-right:6px}
+.rec{background:#E1F5EE;color:#04342C;border:1px solid #0F6E56;border-radius:10px;padding:8px 12px;font-size:13px;margin:8px 0}
+table{border-collapse:collapse;font-size:13px;margin:8px 0}td,th{border:1px solid #C9C2B4;padding:5px 9px;text-align:left}
+th{background:#EFE9DD}
+</style></head><body>
+<h1>K70 — Clocks: precipitation · humidity · wind · air quality</h1>
+<p class="note">Design round 1.14.D1 · two variants · Open-Meteo (existing provider) + its air-quality endpoint · all metrics cached &amp; stale-gated exactly like temperature (30-min gate, pull-to-refresh forces)</p>
+
+<h2>Variant A — metrics grid in the EXPANDED card (recommended)</h2>
+<div class="phone">
+<div class="card"><div class="row"><div><span class="city">Kolkata</span><div class="reg">West Bengal · India</div></div>
+<div><div class="time">14:22</div><div class="dt">Thu, 10 Sep</div></div></div>
+<div class="temp">31.4°C <span class="upd">· Updated 12 min ago</span></div>
+<div class="metrics">
+<div class="m"><span class="lbl">Humidity</span><b>74%</b></div>
+<div class="m"><span class="lbl">Wind</span><b>12 km/h</b></div>
+<div class="m"><span class="lbl">Precipitation</span><b>0.4 mm</b></div>
+<div class="m"><span class="lbl">Air quality</span><span class="aqi usg">AQI 132 · Sensitive</span></div>
+</div>
+<div class="sun">☀ 05:24 – 17:48 &nbsp;&nbsp; ☾ 03:11 – 16:40 · Chaturdashi</div></div>
+<div class="card"><div class="row"><div><span class="city">Zurich</span><div class="reg">Zurich · Switzerland</div></div>
+<div><div class="time">10:52</div><div class="dt">Thu, 10 Sep</div></div></div>
+<div class="temp">18.2°C <span class="upd">· Updated 12 min ago</span></div>
+<div class="reg" style="margin-top:4px">▸ collapsed — tap to expand (metrics live inside, list stays clean for 100 clocks)</div></div>
+</div>
+<div class="rec">✔ Recommended: collapsed cards stay exactly as today (K55 100-clock scrolling untouched); expanded card gains a 2×2 grid; AQI is a colored band chip; any metric that fails shows “—” without hiding the others.</div>
+
+<h2>Variant B — always-visible inline strip on every card</h2>
+<div class="phone">
+<div class="card"><div class="row"><div><span class="city">Kolkata</span><div class="reg">West Bengal · India</div></div>
+<div><div class="time">14:22</div><div class="dt">Thu, 10 Sep</div></div></div>
+<div class="temp">31.4°C <span class="upd">· Updated 12 min ago</span></div>
+<div class="inline">💧 74% · 🌬 12 km/h · ☔ 0.4 mm · <span class="aqi usg">AQI 132</span></div></div>
+</div>
+<p class="note">Denser: every card grows ~1 line even collapsed; at 100 clocks that is 100 extra lines of scroll and double-fetch pressure on first paint. Not recommended, offered for completeness.</p>
+
+<h2>Data &amp; plumbing (both variants)</h2>
+<table>
+<tr><th>#</th><th>Item</th><th>Plan</th></tr>
+<tr><td>1</td><td>Weather call</td><td>Extend the existing call: <code>current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m</code> — still ONE request</td></tr>
+<tr><td>2</td><td>Air quality</td><td>Second endpoint <code>air-quality-api.open-meteo.com</code> (<code>current=us_aqi</code>); its failure never blocks weather</td></tr>
+<tr><td>3</td><td>Cache</td><td>K_TEMPS rows grow: key␟temp␟epochMin␟hum␟wind␟precip␟aqi — tolerant decode, old rows still read (missing → “—”)</td></tr>
+<tr><td>4</td><td>Staleness</td><td>Same 30-min gate + pull-to-refresh force + “Updated X ago” caption (K59 colour)</td></tr>
+<tr><td>5</td><td>AQI bands</td><td>US AQI: 0–50 Good · 51–100 Moderate · 101–150 Sensitive · 151–200 Unhealthy · 201–300 Very Unhealthy · 301+ Hazardous — chip colour per band, label shortened</td></tr>
+<tr><td>6</td><td>Failure</td><td>Per-metric “—”; whole-fetch failure keeps last cached values (as temperature today)</td></tr>
+<tr><td>7</td><td>Companions</td><td>parse guarded per field · one summary log line per refresh · unit tests: row codec v1→v2, AQI banding, formatter</td></tr>
+</table>
+
+<h2>Blocker questions</h2>
+<table>
+<tr><th>#</th><th>Question</th><th>Recommendation</th></tr>
+<tr><td>1</td><td>Variant A (expanded grid) or B (always visible)?</td><td>A</td></tr>
+<tr><td>2</td><td>AQI scale: US or European?</td><td>US AQI (familiar bands in India-facing apps)</td></tr>
+<tr><td>3</td><td>Wind unit: km/h or m/s?</td><td>km/h</td></tr>
+</table>
+</body></html>

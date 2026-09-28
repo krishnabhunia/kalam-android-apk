@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<title>Kalam design 1.3.D5 — Match save block before Save button (K44–K47)</title>
+<style>
+  body{font-family:'Segoe UI',Roboto,sans-serif;background:#ECEFF4;margin:0;padding:24px;color:#111}
+  h1{font-size:20px;margin:0 0 4px}
+  .sub{color:#555;font-size:13px;margin-bottom:20px}
+  .row{display:flex;flex-wrap:wrap;gap:22px;align-items:flex-start}
+  .frame{width:360px;background:#FFF;border:1px solid #C9CFDA;border-radius:18px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,.07)}
+  .cap{font-size:12.5px;font-weight:600;color:#123472;margin:0 0 10px;text-transform:uppercase;letter-spacing:.4px}
+  .box{border:1px solid #C9CFDA;border-radius:12px;padding:12px;font-size:13px}
+  .bh{display:flex;justify-content:space-between;font-weight:600;margin-bottom:6px}
+  .clear{color:#993C1D;font-weight:600;font-size:12.5px}
+  .fld{border:1px solid #C9CFDA;border-radius:9px;padding:9px 10px;margin-top:8px;color:#333;position:relative}
+  .fl{position:absolute;top:-8px;left:8px;background:#FFF;padding:0 4px;font-size:11px;color:#1A3E8C}
+  .ph{color:#999}
+  .btn{border:1.5px solid #1A3E8C;color:#1A3E8C;border-radius:10px;text-align:center;font-weight:600;padding:9px;margin-top:10px}
+  .btn.dis{border-color:#C9CFDA;color:#AAB2C0}
+  .hintline{font-size:11.5px;color:#8A6D00;margin-top:5px;text-align:center}
+  .saveline{font-size:12.5px;margin-top:10px;text-align:center;color:#333}
+  .kv{border:1px solid #C9CFDA;border-radius:12px;overflow:hidden;font-size:13px}
+  .kvh{background:#E9EEF9;color:#123472;font-weight:600;display:flex;padding:8px}
+  .kvr{display:flex;padding:6px 8px}
+  .zeb{background:rgba(0,0,0,.04)}
+  .kk{width:110px;font-weight:600}.kg{flex:1}.kb{flex:1}
+  .cblock{border:1px solid #C9CFDA;border-radius:12px;overflow:hidden;font-size:13px;margin-top:8px}
+  .cbh{background:#E9EEF9;color:#123472;font-weight:600;padding:7px 8px}
+  .tag{display:inline-block;font-size:11px;color:#666;border:1px solid #C9CFDA;border-radius:999px;padding:2px 9px;margin-top:8px}
+  .note{font-size:11.5px;color:#666;margin-top:8px}
+  .band{border-radius:10px;border:1px solid #0F6E56;background:#E1F5EE;color:#0F6E56;font-weight:700;font-size:13px;text-align:center;padding:9px;margin-top:10px}
+</style></head><body>
+<h1>Kalam 1.3.D5 — Match: Name + Matrimony ID + Contact before Save</h1>
+<div class="sub">Supersedes 1.3.D4 · K44 + K45 amended: the three fields live in the save block, Girl form slims to birth data</div>
+<div class="row">
+
+  <div class="frame">
+    <div class="cap">Girl form · birth data only (Name moved down)</div>
+    <div class="box">
+      <div class="bh"><span>Girl</span><span class="clear">Clear</span></div>
+      <div class="fld"><span class="fl">Date of birth</span>17 Nov 1990</div>
+      <div class="fld"><span class="fl">Time of birth · IST</span>12:40</div>
+      <div class="fld"><span class="fl">Place of birth</span>Kolkata</div>
+      <div class="fld"><span class="fl">Lat / Lon</span>22.5726, 88.3639 · resolved</div>
+    </div>
+    <div class="note">No Name field here any more — identity moves to the save block below the result. Clear still empties the whole slate incl. the persisted last result (K47).</div>
+  </div>
+
+  <div class="frame">
+    <div class="cap">K44 + K45 — save block · three fields before Save</div>
+    <div class="box" style="border-style:dashed;color:#888;text-align:center;font-size:12.5px">… full result (details · guna · summary · union band) …</div>
+    <div class="fld"><span class="fl">Girl's Name</span>Example Name</div>
+    <div class="fld"><span class="fl">Matrimony ID (optional)</span><span class="ph">e.g. SH12345678</span></div>
+    <div class="fld"><span class="fl">Mobile Contact (optional)</span><span class="ph">e.g. 98300 12345</span></div>
+    <div class="btn">Save to history</div>
+    <div class="note" style="margin-bottom:14px">Order: Name · Matrimony ID · Contact · Save. All three prefill from the last entries and persist with the form (K47); the two optional ones ride into the history record.</div>
+    <div class="fld"><span class="fl">Girl's Name</span><span class="ph">required to save</span></div>
+    <div class="fld"><span class="fl">Matrimony ID (optional)</span><span class="ph"></span></div>
+    <div class="fld"><span class="fl">Mobile Contact (optional)</span><span class="ph"></span></div>
+    <div class="btn dis">Save to history</div>
+    <div class="hintline">Enter the girl's name to save</div>
+  </div>
+
+  <div class="frame">
+    <div class="cap">K46 — history detail · contact block ("-" when absent)</div>
+    <div class="kv">
+      <div class="kvh"><div class="kk"></div><div class="kg">Girl</div><div class="kb">Boy</div></div>
+      <div class="kvr zeb"><div class="kk">Name</div><div class="kg">Example Name</div><div class="kb">Krishna</div></div>
+      <div class="kvr"><div class="kk">Janma Rasi</div><div class="kg">Vrischika</div><div class="kb">Vrischika</div></div>
+      <div class="kvr zeb"><div class="kk">Janma Nakshatra</div><div class="kg">Vishaka</div><div class="kb">Anuradha</div></div>
+    </div>
+    <div class="cblock">
+      <div class="cbh">Contact details</div>
+      <div class="kvr"><div class="kk">Matrimony ID</div><div class="kg">SH12345678</div></div>
+      <div class="kvr zeb"><div class="kk">Contact Number</div><div class="kg">98300 12345</div></div>
+    </div>
+    <div class="cblock">
+      <div class="cbh">Contact details · legacy / not saved</div>
+      <div class="kvr"><div class="kk">Matrimony ID</div><div class="kg">-</div></div>
+      <div class="kvr zeb"><div class="kk">Contact Number</div><div class="kg">-</div></div>
+    </div>
+    <div class="note">Block sits under the details table when a history row is opened. Every pre-1.4 row shows "-".</div>
+  </div>
+
+  <div class="frame">
+    <div class="cap">K47 — Match tab after app restart · last result restored</div>
+    <div style="display:flex;justify-content:flex-end;font-size:12.5px;font-weight:600;color:#1A3E8C;margin-bottom:6px">History ›</div>
+    <div class="box" style="margin-bottom:8px">
+      <div class="bh"><span>Boy — Krishna</span><span style="font-weight:400;color:#888;font-size:12px">edit in settings</span></div>
+      <div class="bh" style="font-weight:400"><span>Girl — Example Name</span><span class="clear">Clear</span></div>
+    </div>
+    <div class="band">Union is Very Good. The Boy and Girl are not affected by Mangal Dosha</div>
+    <div style="text-align:center"><span class="tag">cached · restored</span></div>
+    <div class="note">The last search survives tab switches and app restarts — restored from cache, zero credits. Only Clear (form link) or Settings ▸ Clear Match Details removes it; Save does not.</div>
+  </div>
+
+</div>
+</body></html>

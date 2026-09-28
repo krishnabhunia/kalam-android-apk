@@ -1,0 +1,93 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kalam 1.16.D1 — K74 hierarchical grouping · K75 metric sorts</title><style>
+body{font-family:Roboto,system-ui,sans-serif;background:#F6F3EE;margin:0;padding:18px;color:#1C1B1F}
+h1{font-size:20px;margin:0 0 4px} h2{font-size:16px;margin:22px 0 8px;color:#123472}
+.note{font-size:13px;color:#5F5C57;margin:0 0 12px}
+.phone{width:390px;background:#FFFBF4;border:1px solid #D8D2C6;border-radius:22px;padding:14px;margin:10px 0}
+.h0{background:#E9EEF9;color:#123472;font-weight:700;border-radius:9px;padding:6px 11px;font-size:13.5px;margin:8px 0 4px}
+.h1x{background:#F1EDE2;color:#123472;font-weight:600;border-radius:8px;padding:4px 10px;font-size:12.5px;margin:5px 0 3px 14px}
+.h2x{background:#F8F5EC;color:#5F5C57;font-weight:600;border-radius:8px;padding:3px 10px;font-size:12px;margin:4px 0 3px 28px}
+.card{border:1px solid #D8D2C6;border-radius:12px;padding:8px 12px;margin:5px 0 5px 28px;background:#fff;font-size:13px}
+.card.l3{margin-left:42px}
+.row{display:flex;justify-content:space-between;align-items:baseline}
+.city{font-weight:600}.t{color:#123472;font-weight:600}
+.menu{border:2px solid #123472;border-radius:12px;background:#fff;width:230px;padding:6px;font-size:13.5px;margin:8px 0}
+.mi{padding:6px 10px;border-radius:8px}.mi.on{background:#E9EEF9;font-weight:700;color:#123472}
+.warn{background:#FDECEA;border:1px solid #C00000;color:#7A1F1F;border-radius:10px;padding:8px 12px;font-size:13px;margin:10px 0}
+.rec{background:#E1F5EE;color:#04342C;border:1px solid #0F6E56;border-radius:10px;padding:8px 12px;font-size:13px;margin:10px 0}
+table{border-collapse:collapse;font-size:13px;margin:8px 0}td,th{border:1px solid #C9C2B4;padding:5px 9px;text-align:left}th{background:#EFE9DD}
+.badge{display:inline-block;background:#FFF3C4;border:1px solid #E0C34D;color:#7A5C00;border-radius:999px;padding:0 7px;font-size:11.5px;font-weight:600}
+</style></head><body>
+<h1>1.16.D1 — Clocks: hierarchical grouping &amp; metric sorts</h1>
+
+<h2>K74 — Group-by menu grows to six (nothing removed)</h2>
+<div class="menu">
+<div class="mi">None</div><div class="mi">Country</div><div class="mi">Continent</div>
+<div class="mi on">Country + State</div><div class="mi">Continent + Countries</div><div class="mi">Continent + Countries + State</div>
+</div>
+
+<b style="font-size:13.5px">Country + State</b>
+<div class="phone">
+<div class="h0">▾▾ India (3)</div>
+<div class="h1x">▾▾ Maharashtra (1)</div>
+<div class="card"><div class="row"><span class="city">Mumbai</span><span class="t">14:22</span></div></div>
+<div class="h1x">▾▾ West Bengal (2)</div>
+<div class="card"><div class="row"><span class="city">Home 🏠</span><span class="t">14:22</span></div></div>
+<div class="card"><div class="row"><span class="city">Bajkul</span><span class="t">14:22</span></div></div>
+<div class="h0">▸ Switzerland (1)</div>
+</div>
+
+<b style="font-size:13.5px">Continent + Countries + State (3 levels)</b>
+<div class="phone">
+<div class="h0">▾▾ Asia (3)</div>
+<div class="h1x">▾▾ India (3)</div>
+<div class="h2x">▾ West Bengal (2)</div>
+<div class="card l3"><div class="row"><span>▸ <span class="city">Home 🏠</span></span><span class="t">14:22</span></div></div>
+<div class="card l3"><div class="row"><span>▸ <span class="city">Bajkul</span></span><span class="t">14:22</span></div></div>
+<div class="h2x">▾▾ Maharashtra (1)</div>
+<div class="card l3"><div class="row"><span class="city">Mumbai</span><span class="t">14:22</span></div></div>
+<div class="h0">▾ Europe (1)</div>
+<div class="card"><div class="row"><span>▸ <span class="city">Zurich</span></span><span class="t">10:52</span></div></div>
+</div>
+
+<table>
+<tr><th>#</th><th>Rule</th></tr>
+<tr><td>1</td><td>State = second-last region segment ("West Bengal · India" → West Bengal); missing state → "Other" bucket inside its country; countries sort as today (India first), states A–Z, "Other" last</td></tr>
+<tr><td>2</td><td>EVERY header at every level runs the K71 four-step cycle independently; a parent at ▸ hides everything beneath (sub-headers included); a parent at ▾ collapses all descendant cards</td></tr>
+<tr><td>3</td><td>Stage keys become full paths ("Asia▸India▸West Bengal") — so "Other" under India and "Other" under Europe never share state; old single-level keys keep working</td></tr>
+<tr><td>4</td><td>Indent + pill weight per level (blue band → beige → pale); counts on every header</td></tr>
+<tr><td>5</td><td>Existing None/Country/Continent behave exactly as in v1.16</td></tr>
+</table>
+
+<h2>K75 — Sort menu grows to seven (nothing removed)</h2>
+<div class="menu">
+<div class="mi">Added</div><div class="mi">Name A–Z</div><div class="mi">Time</div><div class="mi">Country</div>
+<div class="mi on">Temperature ↓</div><div class="mi">Air quality ↓</div><div class="mi">Humidity ↓</div>
+</div>
+<div class="phone">
+<div class="card" style="margin-left:0"><div class="row"><span class="city">Kolkata <span class="badge">31°</span></span><span class="t">14:22</span></div></div>
+<div class="card" style="margin-left:0"><div class="row"><span class="city">Mumbai <span class="badge">29°</span></span><span class="t">14:22</span></div></div>
+<div class="card" style="margin-left:0"><div class="row"><span class="city">Zurich <span class="badge">18°</span></span><span class="t">10:52</span></div></div>
+<div class="card" style="margin-left:0"><div class="row"><span class="city">NewClock <span class="badge">—</span></span><span class="t">03:12</span></div></div>
+</div>
+
+<div class="warn">⚠ Spec conflict surfaced (working rule 3): 1.13.D1 REJECTED temperature sort because stale/absent readings make the order jump. Your request now explicitly includes it — treated as superseding that rejection, with the jumpiness contained: sorting reads the CACHED snapshot only, so order changes exactly when data refreshes (30-min gate / pull-to-refresh), never mid-scroll; clocks with no reading sink to the end (never interleaved by guesses).</div>
+
+<table>
+<tr><th>#</th><th>Rule</th></tr>
+<tr><td>1</td><td>All three sort HIGHEST-FIRST (hottest / worst AQI / most humid) — one mental model; ties keep added order (stable)</td></tr>
+<tr><td>2</td><td>Missing metric → sink last, "—" badge; sorts work inside groups exactly like today's modes</td></tr>
+<tr><td>3</td><td>Menu labels carry ↓ so the direction is explicit</td></tr>
+<tr><td>4</td><td>Companions: pure comparator vectors (incl. missing-sink + tie stability), hierarchical grouping vectors, path-key stage codec vectors</td></tr>
+</table>
+
+<div class="rec">✔ Recommended: highest-first for all three metrics · missing sinks last · full 4-stage cycle on every header level with path-scoped keys.</div>
+
+<h2>Blocker questions</h2>
+<table>
+<tr><th>#</th><th>Question</th><th>Recommendation</th></tr>
+<tr><td>1</td><td>Sort direction: highest-first for Temperature, AQI, Humidity?</td><td>Yes, all three ↓</td></tr>
+<tr><td>2</td><td>Clocks without a reading: sink last?</td><td>Yes</td></tr>
+<tr><td>3</td><td>Sub-headers (state/country levels): full 4-step K71 cycle each?</td><td>Yes, path-scoped</td></tr>
+</table>
+</body></html>

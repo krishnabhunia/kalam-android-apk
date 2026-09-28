@@ -1,0 +1,141 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kalam 1.21.D1 — K80 Date Bridge content in Day tab · K81 per-group font sizes</title><style>
+body{font-family:Roboto,system-ui,sans-serif;background:#F6F3EE;margin:0;padding:18px;color:#1C1B1F}
+h1{font-size:20px;margin:0 0 4px} h2{font-size:16px;margin:24px 0 8px;color:#123472}
+.note{font-size:13px;color:#5F5C57;margin:0 0 12px}
+.phone{width:372px;background:#FFFBF4;border:1px solid #D8D2C6;border-radius:22px;padding:14px;margin:10px 0}
+.hd{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:#5F5C57}
+.nav{display:flex;justify-content:space-between;align-items:center;margin-top:6px}
+.greg{font-size:15.5px;font-weight:600;text-align:center}
+.todaylbl{font-size:12px;color:#5F5C57;text-align:center}
+.bnday{font-size:23px;font-weight:700;text-align:center;color:#1C1B1F;line-height:1.25}
+.tr{font-size:13px;color:#5F5C57;text-align:center;font-style:italic}
+.shon{background:#fff;border:1px solid #D8D2C6;border-radius:16px;padding:11px 14px;margin:9px 0;display:flex;justify-content:space-between;align-items:flex-end}
+.shon .lbl{font-size:11.5px;color:#5F5C57}
+.shon .big{font-size:26px;font-weight:700;color:#8A6D00;line-height:1.15}
+.shon .en{font-size:13px;color:#5F5C57}
+.shon .yr{font-size:13.5px;text-align:right;color:#123472;font-weight:600}
+.method{font-size:11.5px;color:#5F5C57;text-align:center;margin:2px 0 8px}
+.tithi{font-size:13px;color:#123472;font-weight:600;text-align:center}
+.tithien{font-size:12.5px;color:#5F5C57;font-style:italic;text-align:center}
+.cal{background:#fff;border:1px solid #D8D2C6;border-radius:16px;padding:10px;margin-top:10px}
+.calhd{display:flex;justify-content:space-between;align-items:baseline}
+.calhd b{font-size:14.5px}.calhd span{font-size:12.5px;color:#123472;text-align:right}
+.bar{display:flex;justify-content:space-between;background:#E9EEF9;border-radius:9px;padding:4px 10px;margin:7px 0;font-size:12.5px;color:#123472;font-weight:600}
+table.g{width:100%;border-collapse:collapse;font-size:12px;text-align:center}
+table.g th{color:#5F5C57;font-weight:500;padding:3px 0}
+table.g td{padding:4px 0}
+.sel{background:#123472;color:#fff;border-radius:9px;display:inline-block;width:24px;height:22px;line-height:22px}
+.bnnum{display:block;font-size:9.5px;color:#8A6D00}
+.row{display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:6px 0;border-bottom:1px solid #EFE9DD}
+.sl{flex:1;height:4px;background:#D8D2C6;border-radius:4px;margin:0 10px;position:relative}
+.sl i{position:absolute;left:0;top:0;height:4px;background:#123472;border-radius:4px}
+.sl b{position:absolute;top:-5px;width:14px;height:14px;background:#123472;border-radius:50%}
+.pct{width:46px;text-align:right;color:#123472;font-weight:700;font-size:13px}
+.btns{display:flex;gap:10px;margin-top:10px}
+.btn{flex:1;text-align:center;border-radius:11px;padding:9px 0;font-size:13.5px;font-weight:600}
+.p{background:#123472;color:#fff}.s{background:#E9EEF9;color:#123472}
+table{border-collapse:collapse;font-size:13px;margin:8px 0}td,th{border:1px solid #C9C2B4;padding:5px 9px;text-align:left}th{background:#EFE9DD}
+.rec{background:#E1F5EE;color:#04342C;border:1px solid #0F6E56;border-radius:10px;padding:8px 12px;font-size:13px;margin:10px 0}
+.warn{background:#FDECEA;border:1px solid #C00000;color:#7A1F1F;border-radius:10px;padding:9px 12px;font-size:13px;margin:10px 0}
+.new{background:#FFF3C4;border:1px solid #E0C34D;color:#7A5C00;border-radius:5px;padding:0 5px;font-size:11px;font-weight:700}
+</style></head><body>
+<h1>1.21.D1 — Date Bridge content in the Day tab (K80) · per-group font sizes (K81)</h1>
+<p class="note">Everything marked <span class="new">NEW</span> comes from the Date Bridge screenshots; everything else already exists in Kalam v1.21 and only moves or grows.</p>
+
+<div class="warn"><b>⚠ Conflict surfaced before anything is built — the two apps do not agree on the date.</b><br>
+Date Bridge labels its panjika <b>“Traditional panjika · Surya Siddhanta”</b> and shows <b>22 Sep 2026 = ৪ আশ্বিন ১৪৩৩</b>.<br>
+Kalam’s engine (K67) is <b>Lahiri / drik, sankranti-based</b>, golden-gated against drikpanchang (10 Sep 2026 = 24 ভাদ্র verified exactly). Carrying that forward, Kalam would show <b>22 Sep 2026 ≈ ৫ আশ্বিন</b> — a <b>one-day offset</b>, which is the classic Surya Siddhanta vs drik difference.<br>
+This is my arithmetic from the verified anchor, not a fresh engine run — it will be re-verified against drikpanchang at build. <b>Blocker 1 decides which authority Kalam follows.</b> I will not silently switch a drikpanchang-verified engine to another siddhanta.</div>
+
+<h2>K80 — Day tab, redesigned header (Variant A, recommended)</h2>
+<div class="phone">
+  <div class="hd"><span>📍 Kolkata ▾</span><span>⚙</span></div>
+  <div class="nav"><span>‹</span>
+    <div style="flex:1">
+      <div class="todaylbl">আজ · Aaj · Today <span class="new">NEW</span></div>
+      <div class="bnday">মঙ্গলবার <span class="new">NEW size</span></div>
+      <div class="tr">Mongolbar <span class="new">NEW</span></div>
+      <div class="greg" style="margin-top:4px">Tuesday, 22 September 2026</div>
+    </div>
+    <span>›</span></div>
+
+  <div class="shon">
+    <div><div class="lbl">বাংলা সন · Bangla Shon <span class="new">NEW</span></div>
+      <div class="big">৪ আশ্বিন</div><div class="en">4 Ashwin</div></div>
+    <div class="yr">১৪৩৩ বঙ্গাব্দ<br><span style="font-weight:400;color:#5F5C57">1433 Bongabdo</span></div>
+  </div>
+  <div class="method">Drik · Lahiri · sankranti-based &nbsp;<span class="new">NEW label</span></div>
+  <div class="tithi">কৃষ্ণপক্ষ চতুর্দশী · ১৫:০৭ পর্যন্ত</div>
+  <div class="tithien">Krishna Chaturdashi · upto 15:07</div>
+
+  <div class="cal">
+    <div class="calhd"><b>September 2026</b><span>আশ্বিন<br>Ashwin</span></div>
+    <div class="bar"><span>‹</span><span>আজ · Aaj · Today</span><span>›</span></div>
+    <table class="g">
+      <tr><th>S</th><th>M</th><th>T</th><th>W</th><th>T</th><th>F</th><th>S</th></tr>
+      <tr><td></td><td></td><td>1<span class="bnnum">১৫</span></td><td>2<span class="bnnum">১৬</span></td><td>3<span class="bnnum">১৭</span></td><td>4<span class="bnnum">১৮</span></td><td>5<span class="bnnum">১৯</span></td></tr>
+      <tr><td>6<span class="bnnum">২০</span></td><td>7<span class="bnnum">২১</span></td><td>8<span class="bnnum">২২</span></td><td>9<span class="bnnum">২৩</span></td><td>10<span class="bnnum">২৪</span></td><td>11<span class="bnnum">২৫</span></td><td>12<span class="bnnum">২৬</span></td></tr>
+      <tr><td>13<span class="bnnum">২৭</span></td><td>14<span class="bnnum">২৮</span></td><td>15<span class="bnnum">২৯</span></td><td>16<span class="bnnum">৩০</span></td><td>17<span class="bnnum">৩১</span></td><td>18<span class="bnnum">১</span></td><td>19<span class="bnnum">২</span></td></tr>
+      <tr><td>20<span class="bnnum">৩</span></td><td>21<span class="bnnum">৪</span></td><td><span class="sel">22</span><span class="bnnum">৫</span></td><td>23<span class="bnnum">৬</span></td><td>24<span class="bnnum">৭</span></td><td>25<span class="bnnum">৮</span></td><td>26<span class="bnnum">৯</span></td></tr>
+    </table>
+  </div>
+  <div class="note" style="margin:8px 0 0">R.K / Y.G / G.K cards and the Sun·Moon table continue below, unchanged.</div>
+</div>
+
+<table>
+<tr><th>#</th><th>What comes across from Date Bridge</th><th>How it lands in Kalam</th></tr>
+<tr><td>1</td><td>“আজ · Aaj · Today” label</td><td>Above the date; on other pages it reads the weekday only (Kalam’s pager shows past/future days)</td></tr>
+<tr><td>2</td><td>Big Bengali weekday + transliteration</td><td>মঙ্গলবার large + <i>Mongolbar</i>; replaces today’s cramped inline weekday</td></tr>
+<tr><td>3</td><td>Bangla Shon card</td><td>New card: day+month huge in Bengali, transliteration under, year right (both scripts). Uses Kalam’s existing engine values — no new maths</td></tr>
+<tr><td>4</td><td>Method label (“Traditional panjika · Surya Siddhanta”)</td><td>Kalam states its OWN method honestly: “Drik · Lahiri · sankranti-based” (or whatever blocker 1 decides)</td></tr>
+<tr><td>5</td><td>Month calendar grid with Bengali month name</td><td>New collapsible month grid; Gregorian number large, Bengali number small under it; tap a cell = jump the Day pager to it; ‹ Today › bar</td></tr>
+<tr><td>6</td><td>Transliteration spelling</td><td>Date Bridge writes “Ashwin”, Kalam’s table says “Ashshin”. Blocker 2</td></tr>
+<tr><td>7</td><td>—</td><td>Tithi lines (Kalam-only, K68) stay, just repositioned under the Shon card</td></tr>
+</table>
+
+<h2>K80 — Variant B (minimal)</h2>
+<p class="note">Bangla Shon card + big weekday only; no month grid. Less scroll, but loses the month-at-a-glance view that is the main reason to look at a panjika. Offered for completeness.</p>
+
+<h2>K81 — Font sizes screen (Settings → Font sizes)</h2>
+<div class="phone">
+  <div class="hd"><span>‹ Font sizes</span><span></span></div>
+  <div class="note" style="margin:6px 0">Adjust each text group separately.</div>
+  <div class="row"><span style="width:118px">Bengali date &amp; day</span><span class="sl"><i style="width:33%"></i><b style="left:31%"></b></span><span class="pct">110%</span></div>
+  <div class="row"><span style="width:118px">English transliteration</span><span class="sl"><i style="width:17%"></i><b style="left:15%"></b></span><span class="pct">100%</span></div>
+  <div class="row"><span style="width:118px">Gregorian date</span><span class="sl"><i style="width:17%"></i><b style="left:15%"></b></span><span class="pct">100%</span></div>
+  <div class="row"><span style="width:118px">Kalam times &amp; cards</span><span class="sl"><i style="width:50%"></i><b style="left:48%"></b></span><span class="pct">120%</span></div>
+  <div class="row"><span style="width:118px">Year &amp; small labels</span><span class="sl"><i style="width:17%"></i><b style="left:15%"></b></span><span class="pct">100%</span></div>
+  <div class="row" style="border:0"><span style="width:118px">Calendar numbers</span><span class="sl"><i style="width:17%"></i><b style="left:15%"></b></span><span class="pct">100%</span></div>
+  <div class="cal" style="margin-top:10px">
+    <div class="lbl" style="font-size:11px;color:#5F5C57;font-weight:700">LIVE PREVIEW</div>
+    <div style="font-size:13px;color:#5F5C57">Tuesday, 22 September 2026</div>
+    <div class="shon" style="margin:6px 0 0;background:#E9EEF9;border:0">
+      <div><div class="big" style="font-size:24px">৪ আশ্বিন</div><div class="en">4 Ashwin</div></div>
+      <div class="yr">১৪৩৩ বঙ্গাব্দ<br><span style="font-weight:400;color:#5F5C57">1433 Bongabdo</span></div></div>
+    <div style="text-align:center;font-size:12px;margin-top:6px">19 20 21 <span class="sel">22</span> 23 24 25</div>
+  </div>
+  <div class="note" style="margin:8px 0 0">90–150% · Your phone’s text size also applies.</div>
+  <div class="btns"><span class="btn s">Reset all</span><span class="btn p">Save changes</span></div>
+</div>
+
+<table>
+<tr><th>#</th><th>Rule</th></tr>
+<tr><td>1</td><td>Six groups: Bengali date &amp; day · English transliteration · Gregorian date · <b>Kalam times &amp; cards</b> (Kalam-only group, keeps the R.K/Y.G/G.K and Sun·Moon text adjustable) · Year &amp; small labels · Calendar numbers</td></tr>
+<tr><td>2</td><td>Sliders are <b>percent scales 90–150%</b> in 5% steps, applied on top of the phone’s own text size</td></tr>
+<tr><td>3</td><td>Live preview updates as you drag; <b>Save changes</b> commits, <b>Reset all</b> returns every group to 100% (asks to confirm)</td></tr>
+<tr><td>4</td><td>Conflict handled: Kalam already stores four <i>absolute</i> sizes (display 20 / header 16 / sub 14 / data 13, Settings fields 25–28). Those become the <b>base</b> and stay editable where they are today; the new percentages multiply them. Nothing you have already set is lost — blocker 3 can instead retire the old screen</td></tr>
+<tr><td>5</td><td>Storage: 6 new Int fields (scales, default 100); tolerant decode, old blobs read as 100%</td></tr>
+<tr><td>6</td><td>Companions: scale-clamp + codec vectors, “phone text size also applies” verified on device, one log line on save</td></tr>
+</table>
+<div class="rec">✔ Recommended: K80 Variant A (header + Shon card + month grid) · method label stating Kalam’s real method · K81 six groups as percent scales layered over the existing absolute sizes.</div>
+
+<h2>Blocker questions</h2>
+<table>
+<tr><th>#</th><th>Question</th><th>Recommendation</th></tr>
+<tr><td>1</td><td>Calendar authority: keep Kalam’s drikpanchang-verified Lahiri/drik engine, switch to Surya Siddhanta to match Date Bridge, or offer BOTH as a setting?</td><td><b>Keep drik</b> (it is verified against drikpanchang), and show the method label so the difference is never silent. A “Surya Siddhanta” option can be a later item if you want both</td></tr>
+<tr><td>2</td><td>Transliteration spellings: keep Kalam’s (Ashshin, Jyoishtho, Ogrohayon) or adopt Date Bridge’s (Ashwin, Jyeshtha, Agrahayan)?</td><td>Adopt Date Bridge’s — they match what you are reading daily</td></tr>
+<tr><td>3</td><td>Font settings: layer new percent scales over the existing four absolute sizes, or replace that screen entirely?</td><td>Layer (nothing you have set is lost)</td></tr>
+<tr><td>4</td><td>Month grid: expanded by default or collapsed behind a “month view” toggle?</td><td>Collapsed by default — keeps the Kalam cards above the fold; your choice persists</td></tr>
+</table>
+</body></html>

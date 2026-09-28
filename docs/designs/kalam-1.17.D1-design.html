@@ -1,0 +1,74 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kalam 1.17.D1 — K76 Sunrise / Sunset alarms</title><style>
+body{font-family:Roboto,system-ui,sans-serif;background:#F6F3EE;margin:0;padding:18px;color:#1C1B1F}
+h1{font-size:20px;margin:0 0 4px} h2{font-size:16px;margin:22px 0 8px;color:#123472}
+.note{font-size:13px;color:#5F5C57;margin:0 0 12px}
+.phone{width:390px;background:#FFFBF4;border:1px solid #D8D2C6;border-radius:22px;padding:14px;margin:10px 0}
+.hd{text-align:center;font-weight:600;font-size:15px}.hd small{display:block;font-weight:400;color:#8A6D00;font-size:12.5px}
+table.sky{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px}
+table.sky td{padding:7px 6px;border-bottom:1px solid #EAE4D8}
+.bell{font-size:16px}.on{color:#123472}.off{color:#B0ABA2}
+.lead{font-size:11.5px;color:#123472;background:#E9EEF9;border-radius:999px;padding:0 7px;margin-left:4px}
+.sheet{border:2px solid #123472;border-radius:14px 14px 0 0;background:#fff;padding:12px;font-size:13.5px;margin:8px 0 0}
+.pre{display:inline-block;border:1px solid #C9C2B4;border-radius:999px;padding:3px 11px;margin:3px 3px 3px 0;font-size:12.5px}
+.pre.sel{background:#123472;color:#fff;border-color:#123472}
+.card{border:1px solid #D8D2C6;border-radius:14px;padding:10px 14px;margin:10px 0;background:#fff;font-size:13px}
+.row{display:flex;justify-content:space-between;align-items:center;padding:4px 0}
+.sw{width:34px;height:18px;border-radius:999px;background:#123472;display:inline-block;position:relative}.sw::after{content:"";position:absolute;right:2px;top:2px;width:14px;height:14px;border-radius:50%;background:#fff}
+.sw.offsw{background:#C9C2B4}.sw.offsw::after{right:auto;left:2px}
+.alert{border:1px solid #123472;border-left:6px solid #123472;border-radius:10px;padding:8px 12px;background:#fff;font-size:13px;margin:8px 0}
+.rec{background:#E1F5EE;color:#04342C;border:1px solid #0F6E56;border-radius:10px;padding:8px 12px;font-size:13px;margin:10px 0}
+table{border-collapse:collapse;font-size:13px;margin:8px 0}td,th{border:1px solid #C9C2B4;padding:5px 9px;text-align:left}th{background:#EFE9DD}
+</style></head><body>
+<h1>K76 — Alarms at sunrise &amp; sunset, with an “x minutes before” lead</h1>
+<p class="note">Rides on the existing alarm engine (AlarmScheduler · AlarmReceiver · SoundService · FiredLedger · boot/day-tick re-arm). Two new alarm slots beside the six kalam slots.</p>
+
+<h2>Variant A — bells on the Day-tab sky rows (recommended)</h2>
+<div class="phone">
+<div class="hd">Thu, 17 Sep 2026<small>বৃহস্পতিবার, ৩১ ভাদ্র ১৪৩৩ · Thursday, 31 Bhadro 1433</small></div>
+<table class="sky">
+<tr><td>Sunrise</td><td>05:26</td><td style="text-align:right"><span class="bell on">🔔</span><span class="lead">−10 min</span></td></tr>
+<tr><td>Sunset</td><td>17:44</td><td style="text-align:right"><span class="bell off">🔕</span></td></tr>
+<tr><td>Day length</td><td>12h 18m</td><td></td></tr>
+<tr><td>Moonrise</td><td>10:52</td><td></td></tr>
+</table>
+<div class="note" style="margin:8px 0 0">tap 🔔 → sheet ↓ &nbsp;·&nbsp; the pill shows the lead when armed</div>
+<div class="sheet"><b>Sunrise alarm</b> <span class="sw" style="float:right"></span><br>
+<div style="margin-top:8px">Ring before sunrise:</div>
+<span class="pre">At sunrise</span><span class="pre">5</span><span class="pre sel">10</span><span class="pre">15</span><span class="pre">30</span><span class="pre">45</span><span class="pre">60</span><span class="pre">Custom…</span>
+<div class="note" style="margin:8px 0 0">Today: rings at <b>05:16</b> (sunrise 05:26 − 10 min). Sound &amp; duration follow your kalam alarm settings.</div></div>
+</div>
+
+<h2>Variant B — “Sun alarms” card under the sky table</h2>
+<div class="phone">
+<div class="card"><b>Sun alarms</b>
+<div class="row"><span>Sunrise · 05:26</span><span>lead <b>10</b> min &nbsp;<span class="sw"></span></span></div>
+<div class="row"><span>Sunset · 17:44</span><span>lead <b>0</b> min &nbsp;<span class="sw offsw"></span></span></div></div>
+</div>
+<p class="note">Always visible (more scroll every day); duplicates the sky rows' times. Offered for completeness.</p>
+
+<h2>When it rings</h2>
+<div class="alert">🔔 <b>Sunrise in 10 min</b> · 05:26 at your home place<br><span class="note">Foreground → the same in-app alert sheet as kalam alarms; background → notification + sound.</span></div>
+
+<h2>Rules &amp; plumbing</h2>
+<table>
+<tr><th>#</th><th>Rule</th></tr>
+<tr><td>1</td><td>Alarm times = the DISPLAYED sunrise/sunset of the HOME place (respects your sunrise convention setting) minus the lead; today only, re-armed by the existing day-tick/boot/receiver chain</td></tr>
+<tr><td>2</td><td>Lead presets 0/5/10/15/30/45/60 + Custom (0–180 min); per-event lead (sunrise and sunset independent)</td></tr>
+<tr><td>3</td><td>If today's ring time has already passed when armed → nothing today, arms tomorrow (same as kalam slots)</td></tr>
+<tr><td>4</td><td>Two new request codes (6 sunrise, 7 sunset) beside the six kalam codes; FiredLedger idempotency (code@date) — never double-rings, never silenced by a broken ledger (fails open, as K64)</td></tr>
+<tr><td>5</td><td>Settings fields 43–46: sunriseAlarm, sunriseLead, sunsetAlarm, sunsetLead (blob 43→47, tolerant)</td></tr>
+<tr><td>6</td><td>Polar/no-event days (NoEvent) → no arm, one log line; bell shows greyed with “no sunrise today”</td></tr>
+<tr><td>7</td><td>Viewing other days in the Day pager never changes the alarm — bells reflect and control TODAY's alarm; on other days they're shown but disabled with "alarms are for today"</td></tr>
+<tr><td>8</td><td>Companions: scheduler vectors (lead subtraction, passed-slot skip, NoEvent), Settings codec 43→47, FiredLedger keys for codes 6/7; log line per arm/fire</td></tr>
+</table>
+<div class="rec">✔ Recommended: Variant A · presets + custom lead · two dedicated slots on the existing engine.</div>
+
+<h2>Blocker questions</h2>
+<table>
+<tr><th>#</th><th>Question</th><th>Recommendation</th></tr>
+<tr><td>1</td><td>Variant A (bells on sky rows) or B (card)?</td><td>A</td></tr>
+<tr><td>2</td><td>Lead choices: presets + custom, or a free number only?</td><td>Presets + custom</td></tr>
+<tr><td>3</td><td>Alert wording: "Sunrise in 10 min · 05:26" (lead) / "Sunrise now · 05:26" (no lead)?</td><td>Yes</td></tr>
+</table>
+</body></html>
