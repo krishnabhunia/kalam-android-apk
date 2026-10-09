@@ -284,7 +284,9 @@ fun DayTab(s: Settings, f: Fonts, place: Place, today: LocalDate) {
                 Text(viewDate.format(DateTimeFormatter.ofPattern("EEE, dd MMM yyyy")),
                     fontSize = f.header, fontWeight = FontWeight.SemiBold)
                 // K67/K68 — Bengali date + tithi stack (both scripts); failure hides lines, never wrong values
-                val bnDate = remember(viewDate) { try { com.krishna.kalam.core.Bangla.bengaliDate(viewDate, zone) } catch (t: Throwable) { com.krishna.kalam.core.Logger.e("Bangla", "date failed", t); null } }
+                val bnDate = remember(viewDate, zone) { try { com.krishna.kalam.core.Bangla.bengaliDate(viewDate, zone).also {
+                    if (it == null) com.krishna.kalam.core.Logger.e("Bangla", "traditional date unavailable: $viewDate")
+                } } catch (t: Throwable) { com.krishna.kalam.core.Logger.e("Bangla", "date failed", t); null } }
                 val tith = remember(viewDate) {
                     try {
                         val sr = (com.krishna.kalam.core.Solar.sunTimes(viewDate, place.lat, place.lon, zone,
@@ -299,6 +301,11 @@ fun DayTab(s: Settings, f: Fonts, place: Place, today: LocalDate) {
                     Text("${viewDate.dayOfWeek.getDisplayName(java.time.format.TextStyle.FULL, Locale.ENGLISH)}, ${bnDate.day} ${bnDate.monthEn} ${bnDate.year}",
                         fontSize = f.data, color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontStyle = androidx.compose.ui.text.font.FontStyle.Italic, textAlign = TextAlign.Center)
+                    Text(bd.CALENDAR_LABEL, fontSize = f.data,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
+                } else {
+                    Text(com.krishna.kalam.core.Bangla.UNAVAILABLE_LABEL, fontSize = f.data,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
                 }
                 if (tith != null) {
                     val bd = com.krishna.kalam.core.Bangla

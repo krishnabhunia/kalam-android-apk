@@ -1,5 +1,15 @@
 # Kalam Android — working agreement (read this first)
 
+## 9 October 2026 user override
+The user explicitly requested implementation and a PR to match the traditional
+calendar followed in Midnapore (9 October = 21 Ashwin 1433). This supersedes the
+earlier Drik civil-calendar choice and the old two-part version/release procedure
+below. Civil dates now use the source-backed offline almanac described in
+`docs/calendar/traditional-calendar.md`; tithi remains Drik. Do not reintroduce a
+Drik fallback for unavailable civil dates. Semantic versions, PR betas, stable
+main releases, and a single platform ZIP are managed by `.github/workflows/software.yml`.
+The historical instructions and decisions below explain the existing code.
+
 This file carries the conventions established over v1.0 → v1.21 in chat. Follow them exactly.
 
 ## Project constants

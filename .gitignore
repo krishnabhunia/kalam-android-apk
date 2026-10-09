@@ -34,3 +34,4 @@ google-services.json
 # Test/report scratch
 app/src/test/resources/**/*.tmp
 dist/
+__pycache__/

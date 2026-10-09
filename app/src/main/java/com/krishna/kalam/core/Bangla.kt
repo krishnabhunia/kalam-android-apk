@@ -7,7 +7,9 @@ import java.time.ZonedDateTime
 import kotlin.math.floor
 
 /**
- * K67/K68/K69 — Bengali (West Bengal, sankranti-based) calendar + tithi.
+ * Bengali civil dates follow the bundled traditional West Bengal almanac.
+ * The Drik/Lahiri solar helpers below are retained for astronomical comparisons,
+ * and must not drive the traditional civil date.
  * Sidereal solar longitude = Lunar.sunAppLong − Lahiri ayanamsa (linear approx; ±1–2′,
  * disclosed: a sankranti within minutes of local midnight could shift a month start by
  * one day — golden vectors + device drikpanchang checks guard the dates that matter).
@@ -33,13 +35,6 @@ object Bangla {
     fun isSankrantiDay(d: LocalDate, zone: ZoneId): Boolean =
         signAtStartOfDay(d, zone) != signAtStartOfDay(d.plusDays(1), zone)
 
-    /** Most recent day S <= from with a sankranti; walk-back bounded. */
-    private fun lastSankrantiOnOrBefore(from: LocalDate, zone: ZoneId): LocalDate? {
-        var d = from
-        repeat(35) { if (isSankrantiDay(d, zone)) return d; d = d.minusDays(1) }
-        return null
-    }
-
     // Month order: index = sidereal sign after the sankranti (0 = Mesha = Boishakh).
     val MONTHS_BN = listOf("বৈশাখ","জ্যৈষ্ঠ","আষাঢ়","শ্রাবণ","ভাদ্র","আশ্বিন","কার্তিক","অগ্রহায়ণ","পৌষ","মাঘ","ফাল্গুন","চৈত্র")
     val MONTHS_EN = listOf("Boishakh","Jyoishtho","Asharh","Srabon","Bhadro","Ashshin","Kartik","Ogrohayon","Poush","Magh","Falgun","Choitro")
@@ -53,26 +48,19 @@ object Bangla {
         val monthEn get() = MONTHS_EN[monthIdx]
     }
 
-    /** 1 Boishakh of Bengali year (greg year y): day after the Mesha sankranti (~mid-April). */
-    fun boishakh1(gregYear: Int, zone: ZoneId): LocalDate? {
-        var d = LocalDate.of(gregYear, 4, 7)
-        repeat(16) {
-            if (isSankrantiDay(d, zone) && signAtStartOfDay(d.plusDays(1), zone) == 0) return d.plusDays(1)
-            d = d.plusDays(1)
-        }
-        return null
-    }
+    /** West Bengal civil New Year. A civil date is independent of the viewing zone. */
+    @Suppress("UNUSED_PARAMETER")
+    fun boishakh1(gregYear: Int, zone: ZoneId): LocalDate? = TraditionalCalendar.newYear(gregYear)
 
-    /** Bengali date for local day d (WB rule). Null only if the scan fails (logged by caller). */
-    fun bengaliDate(d: LocalDate, zone: ZoneId): BDate? {
-        val s = lastSankrantiOnOrBefore(d.minusDays(1), zone) ?: return null
-        val monthStart = s.plusDays(1)
-        val monthIdx = signAtStartOfDay(monthStart, zone)
-        val day = (monthStart.until(d, java.time.temporal.ChronoUnit.DAYS) + 1).toInt()
-        val b1 = boishakh1(d.year, zone) ?: return null
-        val year = if (!d.isBefore(b1)) d.year - 593 else d.year - 594
-        return BDate(day, monthIdx, year)
-    }
+    /** Traditional West Bengal civil date; null outside the verified almanac coverage.
+     * d is the caller's displayed Gregorian date. Never silently substitute Drik or
+     * Bangladesh dates when the traditional almanac has no entry.
+     */
+    @Suppress("UNUSED_PARAMETER")
+    fun bengaliDate(d: LocalDate, zone: ZoneId): BDate? = TraditionalCalendar.date(d)
+
+    const val CALENDAR_LABEL = "West Bengal traditional calendar"
+    const val UNAVAILABLE_LABEL = "Traditional Bengali date unavailable"
 
     // ---------- Tithi ----------
     val TITHI_BN = listOf("প্রতিপদ","দ্বিতীয়া","তৃতীয়া","চতুর্থী","পঞ্চমী","ষষ্ঠী","সপ্তমী","অষ্টমী","নবমী","দশমী","একাদশী","দ্বাদশী","ত্রয়োদশী","চতুর্দশী")
