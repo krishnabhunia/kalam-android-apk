@@ -12,7 +12,7 @@ for tag in tags:
     if match:
         stable.append(tuple(int(part or 0) for part in match.groups()))
 major, minor, patch = max(stable, default=(1,21,0))
-version = f'{major}.{minor}.{patch+1}'
+version = f'{major}.{minor+1}.0' if os.environ.get('VERSION_BUMP') == 'minor' else f'{major}.{minor}.{patch+1}'
 if os.environ['GITHUB_EVENT_NAME'] == 'pull_request':
     import json
     event = json.loads(pathlib.Path(os.environ['GITHUB_EVENT_PATH']).read_text())

@@ -876,3 +876,15 @@ Repo krishnabhunia/kalam-calendar exists (public, push OK from Krishna's side) b
 - Add reported-date, boundary, full-coverage, timezone and unavailable-date tests.
 - Add one Android workflow with automatic bugfix semantic versions, PR betas,
   stable releases on main, and one ZIP containing `Android/Kalam_<version>.apk`.
+## 1.22.0 beta — keep clocks across reinstalling (9 October 2026)
+
+- Request Android's Keep app data uninstall option on supported phones.
+- Add clock-only JSON backup and restore using the system document picker;
+  a file saved in Downloads survives uninstalling Kalam.
+- Preserve all clock identities, locations, aliases, expanded states and
+  ordering/grouping preferences; restore confirms the count and commits atomically.
+- Reject damaged/foreign/oversized backups before modifying existing data.
+- Document that a backup is needed before uninstalling and that automatic
+  Android restore depends on device backup settings and stable signing identity.
+- Allocate a minor semantic version for this feature. Device reinstall checks
+  are still pending; no claim of unconditional automatic restore is made.

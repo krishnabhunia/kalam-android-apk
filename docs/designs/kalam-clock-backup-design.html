@@ -1,0 +1,8 @@
+<!doctype html><meta charset="utf-8"><title>Kalam clock backup</title>
+<style>body{font:16px system-ui;background:#111827;color:#f9fafb;max-width:440px;margin:40px auto}section{border:1px solid #475569;padding:20px;border-radius:16px}button{padding:12px;margin:4px;background:#2563eb;color:white;border:0;border-radius:8px}p{line-height:1.5}</style>
+<h1>Clock backup</h1><section><p>Keep your clocks when reinstalling Kalam.</p>
+<button>Back up clocks</button><button>Restore clocks</button>
+<p>Save a backup to Downloads before uninstalling. After reinstalling, choose Restore clocks and select that file.</p>
+<p>On supported phones, select “Keep app data” when uninstalling. Android backup may also restore your data, but a saved file is the reliable fallback.</p></section>
+<h2>Restore preview</h2><section><p>Restore 12 clocks?</p><p>This replaces your current clocks and restores their names, locations, aliases, order, expanded views and grouping. Other settings stay as they are.</p><button>Cancel</button><button>Restore</button></section>
+<p>Implementation: versioned clock-only JSON through Android's document picker, bounded reads and strict validation, atomic DataStore restore, no storage-wide permission. Weather refreshes after restore. No unresolved design decisions; the user explicitly requested retaining clocks.</p>

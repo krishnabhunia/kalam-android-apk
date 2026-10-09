@@ -28,6 +28,8 @@ jobs:
       - uses: gradle/actions/setup-gradle@v6
       - name: Allocate semantic version and synchronize badges
         id: version
+        env:
+          VERSION_BUMP: minor
         run: python tools/ci_version.py
       - name: Test and check version
         run: |

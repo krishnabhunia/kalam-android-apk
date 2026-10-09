@@ -9,6 +9,11 @@ Civil dates follow the local traditional almanac, with bundled coverage from
 15 April 2025 through 14 April 2028. See [calendar provenance](docs/calendar/traditional-calendar.md).
 Tithi continues to use the existing astronomical engine.
 
+To keep clocks across reinstalling, use **Clocks → Back up clocks** and save the
+file in Downloads before uninstalling. After reinstalling, choose **Restore
+clocks** and select the file. On supported phones, Kalam also requests the
+**Keep app data** uninstall option. See [clock backup](docs/clock-backup.md).
+
 ## Build
 
 ```
