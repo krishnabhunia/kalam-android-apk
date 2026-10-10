@@ -10,10 +10,10 @@ This is an OS prompt, not a silent override of the user's uninstall decision.
 
 For a portable backup independent of signing identity or cloud backup timing:
 
-1. Open **Clocks → Back up clocks** while your clocks are still present.
+1. Open **Settings → Clock backup → Back up clocks** while your clocks are still present.
 2. Save `Kalam_clocks_backup.json` in **Downloads** or another shared folder.
 3. Back up again after changing your clocks. Check that saving succeeded.
-4. Reinstall Kalam, then open **Clocks → Restore clocks** and select that file.
+4. Reinstall Kalam, then open **Settings → Clock backup → Restore clocks** and select that file.
 5. Review the clock count and confirm restoration. The saved list replaces the
    current clocks, including an empty list if an empty backup is selected.
 
@@ -35,6 +35,11 @@ CI currently builds debug-signed APKs; fresh GitHub runners may generate
 different debug certificates. Manual clock files work across those installs;
 OS data retention and Auto Backup should only be relied on with a stable
 signing certificate.
+
+The Clock backup section starts collapsed and shows only its title and arrow.
+Backup controls and reinstall guidance appear when expanded. Restoring clocks
+preserves unrelated unsaved Settings edits; Save and Discard apply only to
+setting changes, not to backup or restore.
 
 ## Device checks
 

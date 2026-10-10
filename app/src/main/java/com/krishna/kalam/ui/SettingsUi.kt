@@ -57,7 +57,13 @@ fun SettingsScreen(committed: Settings, f0: Fonts, saved: List<Place>, onBack: (
                    onHistory: () -> Unit) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
-    var draft by remember(committed) { mutableStateOf(committed) }
+    // Clock restoration is immediate; retain unrelated unsaved edits.
+    val draftKey = committed.copy(clockSort = "ADDED", clockGroup = "NONE", groupStages = "", sortDir = "0")
+    var draft by remember(draftKey) { mutableStateOf(committed) }
+    LaunchedEffect(committed.clockSort, committed.clockGroup, committed.groupStages, committed.sortDir) {
+        draft = draft.copy(clockSort = committed.clockSort, clockGroup = committed.clockGroup,
+            groupStages = committed.groupStages, sortDir = committed.sortDir)
+    }
     val dirty = draft != committed
     var askExit by remember { mutableStateOf(false) }
     var openGroup by remember { mutableStateOf<String?>(null) }   // K62 — all collapsed on entry
@@ -240,6 +246,7 @@ fun SettingsScreen(committed: Settings, f0: Fonts, saved: List<Place>, onBack: (
                         RowNav("Manage saved locations", "${saved.size} of ${Prefs.MAX_SAVED}", f) { onSavedManager() }
                     }
             }
+            ClockBackupControls(f, openGroup == "Clock backup") { groupToggle("Clock backup") }
             GroupBox("Match", f, openGroup == "Match", { groupToggle("Match") }) {
                     Deck("My details", f, deckOpen("my"), { toggleDeck("my") }) {
                         var bname by remember(draft.boyName) { mutableStateOf(draft.boyName) }

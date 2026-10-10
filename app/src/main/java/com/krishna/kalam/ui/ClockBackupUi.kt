@@ -17,7 +17,7 @@ import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun ClockBackupControls(f: Fonts) {
+fun ClockBackupControls(f: Fonts, expanded: Boolean, onToggle: () -> Unit) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     var busy by remember { mutableStateOf(false) }
@@ -58,16 +58,24 @@ fun ClockBackupControls(f: Fonts) {
             } finally { busy = false }
         }
     }
-    Column(Modifier.fillMaxWidth().padding(bottom = 8.dp)) {
+    GroupBox("Clock backup", f, expanded, onToggle) {
+        Text("Save a copy of your clocks before uninstalling Kalam.", fontSize = f.data,
+            color = MaterialTheme.colorScheme.onSurfaceVariant)
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedButton(enabled = !busy, onClick = { export.launch("Kalam_clocks_backup.json") }) {
+            Button(enabled = !busy, onClick = { export.launch("Kalam_clocks_backup.json") }) {
                 Text("Back up clocks", fontSize = f.data)
             }
             OutlinedButton(enabled = !busy, onClick = { restore.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) }) {
                 Text("Restore clocks", fontSize = f.data)
             }
         }
-        TextButton(onClick = { help = true }) { Text("Keep clocks when reinstalling", fontSize = f.data) }
+        Text("Save the file in Downloads. After reinstalling, return here and choose Restore clocks.",
+            fontSize = f.data, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text("Includes clock names, locations, aliases, order, grouping and expanded views.",
+            fontSize = f.data, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        TextButton(onClick = { help = true }) { Text("More about reinstalling", fontSize = f.data) }
+        Text("Backup and restore work immediately; the Settings Save button is for setting changes.",
+            fontSize = f.data, color = MaterialTheme.colorScheme.onSurfaceVariant)
         if (busy) LinearProgressIndicator(Modifier.fillMaxWidth())
     }
     if (help) AlertDialog(onDismissRequest = { help = false }, title = { Text("Keep your clocks") },
