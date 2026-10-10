@@ -342,3 +342,15 @@ Persistence quartet applies where marked ⟳: act → verify → kill+reopen →
 | D-v1.21-6 | Snooze limit | Snooze three times | Third snooze offers no further snooze; stops for the day |
 | D-v1.21-7 | Ring while using the phone | Let it fire with the screen on | Alarm screen comes to the front with STOP |
 | D-v1.21-8 | Notification fallback | If the screen ever fails to appear | Notification shows a visible STOP action that works |
+# Android updater — pending real-device checks (10 October 2026)
+
+- Configure the permanent protected signing key before publishing an installable APK.
+- Back up existing clocks before any one-time change from an unavailable old key.
+- Check a same-key, higher-code APK installs over Kalam and preserves clocks,
+  saved places, settings, Match history and alarm configuration.
+- Verify the App updates card starts collapsed with title/arrow only.
+- Check stable-only default, persisted beta opt-in, explicit check, startup check,
+  offline/rate-limit messaging, release notes and checksum/certificate errors.
+- Verify permission handoff for installing unknown apps and the system install
+  confirmation. Cancel permission/install; Kalam and its data must remain intact.
+- Confirm a different-key APK is blocked before opening the installer.

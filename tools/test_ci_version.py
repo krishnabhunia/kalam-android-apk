@@ -26,7 +26,7 @@ class VersionTest(unittest.TestCase):
             self.assertIn(f'versionName "{expected}"', gradle.read_text())
             self.assertIn('versionCode 33;', gradle.read_text())
             self.assertIn(f'NAME = "{expected}"', badge.read_text())
-            self.assertEqual(f'version={expected}\ncode=33\n', (root/'output').read_text())
+            self.assertTrue((root/'output').read_text().startswith(f'version={expected}\ncode=33\ndate='))
 
     def test_first_beta(self):
         self.check_version('pull_request', '', '1.21.1-beta.7.10.2')
@@ -36,6 +36,9 @@ class VersionTest(unittest.TestCase):
 
     def test_latest_stable_excludes_betas(self):
         self.check_version('push', 'v1.21.1\nv1.21.2\nv1.22.0-beta.7\n', '1.21.3')
+
+    def test_manual_beta_channel(self):
+        self.check_version('workflow_dispatch', 'v1.23.0\n', '1.24.0-beta.manual.10.2', bump='minor')
 
     def test_clockBackupFeatureAllocatesMinorVersion(self):
         self.check_version('push', 'v1.21.1\n', '1.22.0', bump='minor')

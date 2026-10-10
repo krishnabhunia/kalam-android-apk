@@ -17,6 +17,8 @@ if os.environ['GITHUB_EVENT_NAME'] == 'pull_request':
     import json
     event = json.loads(pathlib.Path(os.environ['GITHUB_EVENT_PATH']).read_text())
     version += f'-beta.{event["number"]}.{os.environ["GITHUB_RUN_NUMBER"]}.{os.environ["GITHUB_RUN_ATTEMPT"]}'
+elif os.environ['GITHUB_EVENT_NAME'] == 'workflow_dispatch':
+    version += f'-beta.manual.{os.environ["GITHUB_RUN_NUMBER"]}.{os.environ["GITHUB_RUN_ATTEMPT"]}'
 # This repository previously released code 22. The monotonic workflow run number
 # avoids beta/stable code collisions without encoding SemVer into Android's int.
 code = 23 + int(os.environ['GITHUB_RUN_NUMBER'])
@@ -29,5 +31,5 @@ today = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=5,minut
 text = re.sub(r'const val RELEASE_DATE = "[^"]+"', f'const val RELEASE_DATE = "{today}"', text)
 badge.write_text(text)
 with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
-    output.write(f'version={version}\ncode={code}\n')
+    output.write(f'version={version}\ncode={code}\ndate={today}\n')
 print(f'Kalam {version}, Android code {code}')

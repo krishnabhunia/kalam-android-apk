@@ -107,6 +107,10 @@ object Prefs {
     private val K_HISTORY = stringPreferencesKey("match_history_v1")
     private val K_CLOCKS = stringPreferencesKey("clocks_v1")
     private val K_TEMPS = stringPreferencesKey("clock_temps_v1")
+    private val K_INCLUDE_BETA = booleanPreferencesKey("include_beta_updates")
+    fun includeBetaFlow(ctx: Context): Flow<Boolean> = ctx.store.data.map { it[K_INCLUDE_BETA] ?: false }
+    suspend fun includeBeta(ctx: Context): Boolean = ctx.store.data.first()[K_INCLUDE_BETA] ?: false
+    suspend fun setIncludeBeta(ctx: Context, enabled: Boolean) { ctx.store.edit { it[K_INCLUDE_BETA] = enabled } }
     const val MAX_SAVED = 20
 
     private const val FS = "\u001F"; private const val RS = "\u001E"

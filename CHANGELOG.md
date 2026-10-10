@@ -888,3 +888,21 @@ Repo krishnabhunia/kalam-calendar exists (public, push OK from Krishna's side) b
   Android restore depends on device backup settings and stable signing identity.
 - Allocate a minor semantic version for this feature. Device reinstall checks
   are still pending; no claim of unconditional automatic restore is made.
+# 1.24.0 beta — Android updates and permanent signing (10 October 2026)
+
+- Confirm different signing certificates in the published 1.22.0 and 1.23.0 APKs.
+- Require one protected signing key and pinned certificate for installable
+  workflow artifacts; refuse publication when signing is not configured.
+- Add a collapsible App updates section in Settings with installed version,
+  manual GitHub check, persisted optional beta switch, verified download and
+  Android installer. Check once on app startup.
+- Validate semantic version/channel, ZIP digest/size, exact APK payload,
+  package, versionCode/versionName and installed certificate before installation.
+- Keep PR build tokens read-only, publish stable releases after merge, and allow
+  maintainers to explicitly publish optional beta releases with workflow dispatch.
+- Produce one directly downloadable ZIP and tag source with delivered metadata.
+- Resolve release lint failure caused by the old Fragment dependency from Play Services.
+- Local verification: 137 Android tests, 7 Python tests, release APK build/lint,
+  correct package/version/non-debuggable manifest and two identical signing runs
+  with a local test key. Permanent production signing setup and real-device
+  install/update/data-retention checks remain pending.

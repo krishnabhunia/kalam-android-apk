@@ -5,7 +5,7 @@ android {
     defaultConfig {
         applicationId "com.krishna.kalam"
         minSdk 26; targetSdk 34
-        versionCode 23; versionName "1.22.0-beta.1"
+        versionCode 34; versionName "1.24.0-beta.1"
     }
     buildFeatures { compose true }
     composeOptions { kotlinCompilerExtensionVersion '1.5.14' }
@@ -19,6 +19,8 @@ dependencies {
     implementation 'androidx.compose.ui:ui'
     implementation 'androidx.compose.foundation:foundation'
     implementation 'androidx.activity:activity-compose:1.9.0'
+    // Play Services otherwise pulls Fragment 1.1, which fails release ActivityResult lint.
+    implementation 'androidx.fragment:fragment:1.8.1'
     implementation 'androidx.core:core-ktx:1.13.1'
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.8.2'
     implementation 'androidx.datastore:datastore-preferences:1.1.1'
