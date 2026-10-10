@@ -25,11 +25,14 @@ gradle :app:assembleDebug
 ## Releases
 
 The single Software workflow tests PRs and produces semantic-version beta APKs.
-After merge to main, it publishes the next stable bugfix version on GitHub.
+After merge to main, it publishes the allocated stable version on GitHub.
 The single artifact is `Kalam_<version>.zip`; one extraction reveals
 `Android/Kalam_<version>.apk`. Windows and macOS are absent and are skipped.
-APKs currently use the debug signing key; stable signing and self-update remain
-queued under K83 and are not implemented by this calendar correction.
+Installable workflow APKs require the permanent signing key in protected GitHub
+Actions secrets. Missing signing configuration blocks publication rather than
+generating a different debug key. Settings includes GitHub update checks,
+optional beta releases, verified download and Android's installation prompt.
+See [Android updates and signing setup](docs/android-updates.md).
 
 ## Privacy
 

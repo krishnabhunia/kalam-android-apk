@@ -124,6 +124,14 @@ fun Root() {
     val f = fontsOf(settings)
 
     LaunchedEffect(Unit) {
+        try { com.krishna.kalam.update.GitHubUpdates.check(Prefs.includeBeta(ctx)) }
+        catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            Logger.e("Updates", "startup update check failed", e)
+        }
+    }
+
+    LaunchedEffect(Unit) {
         while (true) {
             delay(30_000)
             val now = LocalDate.now()

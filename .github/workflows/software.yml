@@ -4,6 +4,12 @@ on:
     branches: [main]
   push:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      publish_beta:
+        description: Publish this branch as an optional GitHub beta release
+        type: boolean
+        default: false
 permissions:
   contents: read
 concurrency:
@@ -12,8 +18,10 @@ concurrency:
 jobs:
   android:
     runs-on: ubuntu-24.04
-    permissions:
-      contents: write
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      code: ${{ steps.version.outputs.code }}
+      date: ${{ steps.version.outputs.date }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -30,6 +38,7 @@ jobs:
         id: version
         env:
           VERSION_BUMP: minor
+          PUBLISH_BETA: ${{ inputs.publish_beta }}
         run: python tools/ci_version.py
       - name: Test and check version
         run: |
@@ -37,29 +46,78 @@ jobs:
           python version_gate.py
           python -m unittest discover -s tools -p 'test_*.py'
           ./gradlew :app:testDebugUnitTest
-      - name: Build Android beta or stable APK
-        run: ./gradlew :app:assembleDebug
-      - name: Package and verify delivered APK
+      - name: Build unsigned release APK
+        run: ./gradlew :app:assembleRelease
+      - name: Sign with the permanent Android key
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_SIGNING_CERT_SHA256: ${{ vars.ANDROID_SIGNING_CERT_SHA256 }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: python tools/sign_apk.py app/build/outputs/apk/release/app-release-unsigned.apk "package/Android/Kalam_${VERSION}.apk"
+      - name: Verify and package the delivered APK
         env:
           VERSION: ${{ steps.version.outputs.version }}
           CODE: ${{ steps.version.outputs.code }}
         run: |
-          mkdir -p package/Android
-          cp app/build/outputs/apk/debug/app-debug.apk "package/Android/Kalam_${VERSION}.apk"
           BADGING=$("$ANDROID_HOME/build-tools/34.0.0/aapt" dump badging "package/Android/Kalam_${VERSION}.apk")
           echo "$BADGING" | head -1
           echo "$BADGING" | grep "versionCode='$CODE' versionName='$VERSION'"
           (cd package && zip -r "../Kalam_${VERSION}.zip" Android)
-      - name: Upload the single platform archive
+      - name: Upload exactly one directly downloadable ZIP
         uses: actions/upload-artifact@v7
         with:
-          name: Kalam_${{ steps.version.outputs.version }}
-          path: package/
+          name: Kalam_${{ steps.version.outputs.version }}.zip
+          path: Kalam_${{ steps.version.outputs.version }}.zip
           if-no-files-found: error
-          archive: true
-      - name: Publish stable release after merge to main
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+          archive: false
+  publish:
+    needs: android
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.publish_beta)
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/download-artifact@v8
+        with:
+          name: Kalam_${{ needs.android.outputs.version }}.zip
+          path: release
+          skip-decompress: true
+      - name: Tag the source with the delivered version metadata
+        env:
+          VERSION: ${{ needs.android.outputs.version }}
+          CODE: ${{ needs.android.outputs.code }}
+          RELEASE_DATE: ${{ needs.android.outputs.date }}
+        run: |
+          python - <<'PY'
+          import os, pathlib, re
+          version, code, date = os.environ['VERSION'], os.environ['CODE'], os.environ['RELEASE_DATE']
+          assert re.fullmatch(r'[0-9]+\.[0-9]+\.[0-9]+(?:-beta\.[0-9A-Za-z.]+)?', version)
+          assert code.isdigit()
+          p = pathlib.Path('app/build.gradle')
+          p.write_text(re.sub(r'versionCode \d+; versionName "[^"]+"', f'versionCode {code}; versionName "{version}"', p.read_text()))
+          p = pathlib.Path('app/src/main/java/com/krishna/kalam/AppVersion.kt')
+          s = re.sub(r'const val NAME = "[^"]+"', f'const val NAME = "{version}"', p.read_text())
+          p.write_text(re.sub(r'const val RELEASE_DATE = "[^"]+"', f'const val RELEASE_DATE = "{date}"', s))
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app/build.gradle app/src/main/java/com/krishna/kalam/AppVersion.kt
+          git commit --allow-empty -m "Record delivered Kalam $VERSION metadata"
+          git tag "v$VERSION"
+          git push origin "refs/tags/v$VERSION"
+      - name: Publish the verified ZIP
         env:
           GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ steps.version.outputs.version }}
-        run: gh release create "v$VERSION" "Kalam_${VERSION}.zip" --target "$GITHUB_SHA" --title "Kalam v$VERSION" --generate-notes
+          GH_REPO: ${{ github.repository }}
+          VERSION: ${{ needs.android.outputs.version }}
+          BETA: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |
+          FLAGS=()
+          if [ "$BETA" = "true" ]; then FLAGS+=(--prerelease --latest=false); fi
+          gh release create "v$VERSION" "release/Kalam_${VERSION}.zip" --verify-tag --title "Kalam v$VERSION" --generate-notes "${FLAGS[@]}"

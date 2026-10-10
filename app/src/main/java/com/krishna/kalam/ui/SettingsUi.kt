@@ -358,6 +358,7 @@ fun SettingsScreen(committed: Settings, f0: Fonts, saved: List<Place>, onBack: (
             GroupBox("Logs", f, openGroup == "Logs", { groupToggle("Logs") }) {
                 RowNav("Error logs", "", f) { onErrorLogs() }
             }
+            UpdatesControls(f, openGroup == "App updates") { groupToggle("App updates") }
             // K58 + K62 — About: last box, ALWAYS expanded (no toggle)
             Column(Modifier.fillMaxWidth()
                 .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(14.dp))) {
