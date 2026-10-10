@@ -243,11 +243,27 @@ fun clocksFlow(ctx: Context) = ctx.store.data.map { p -> decodeClocks(p[K_CLOCKS
         decodeClocks(ctx.store.data.first()[K_CLOCKS] ?: "")
 
     suspend fun writeClocks(ctx: Context, list: List<ClockPlace>) {
-        ctx.store.edit { p -> p[K_CLOCKS] = list.joinToString(RS) {
+        ctx.store.edit { p -> p[K_CLOCKS] = encodeClocks(list) }
+    }
+
+    private fun encodeClocks(list: List<ClockPlace>) = list.joinToString(RS) {
             listOf(it.name.replace(FS, " ").replace(RS, " "),
                    it.region.replace(FS, " ").replace(RS, " "),
                    it.tz, it.lat.toString(), it.lon.toString(),
-                   it.expanded.toString(), it.alias).joinToString(FS) } }
+                   it.expanded.toString(), it.alias.replace(FS, " ").replace(RS, " ")).joinToString(FS) }
+
+    suspend fun clockArchive(ctx: Context): ClockArchive {
+        val p = ctx.store.data.first()
+        return ClockBackup.snapshot(decodeClocks(p[K_CLOCKS] ?: ""), decodeSettings(p[K_SETTINGS]))
+    }
+
+    /** Restore the entire clock list and its display settings in one transaction. */
+    suspend fun restoreClocks(ctx: Context, archive: ClockArchive) {
+        ClockBackup.encode(archive) // validate before changing any persisted data
+        ctx.store.edit { p ->
+            p[K_CLOCKS] = encodeClocks(archive.clocks)
+            p[K_SETTINGS] = encodeSettings(archive.applyTo(decodeSettings(p[K_SETTINGS])))
+        }
     }
 
     fun tempsFlow(ctx: Context) = ctx.store.data.map { decodeTemps(it[K_TEMPS] ?: "") }

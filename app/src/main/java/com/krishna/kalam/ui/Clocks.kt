@@ -190,6 +190,7 @@ fun ClocksTab(s: com.krishna.kalam.data.Settings, f: Fonts) {
     androidx.compose.foundation.layout.Box(Modifier.fillMaxSize()
         .nestedScroll(pullState.nestedScrollConnection)) {
     LazyColumn(Modifier.fillMaxSize().padding(14.dp, 8.dp)) {   // K55 — lazy: 100 cards scroll clean
+        item { ClockBackupControls(f) }
         if (clocks.isNotEmpty()) item {   // K65/K66 — sort + group chips
             Row(Modifier.fillMaxWidth().padding(bottom = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)) {

@@ -864,3 +864,27 @@ drikpanchang (Kolkata, fetched 28-Sep) confirms Kalam exactly: 17 Sep = 31 Bhadr
 
 ### K83 — GitHub release channel + in-app self-update (Krishna 28-Sep) — QUEUED, design 1.21.D2
 Repo krishnabhunia/kalam-calendar exists (public, push OK from Krishna's side) but is the ICS-feed project (kalam_ics.py, rk/yg/gk.ics, monthly refresh workflow) with ZERO GitHub Releases and no Android source. Session has clone/read; push from this session is REFUSED (Claude GitHub App not installed for the org) — Krishna must push/publish, or install the app.
+## 1.21.1 beta — traditional Midnapore calendar correction (9 October 2026)
+
+- Change Bengali civil dates from Drik/Lahiri to bundled traditional West Bengal
+  almanac boundaries: 9 October 2026 is 21 Ashwin 1433. Both Day and Week share
+  the same lookup; this is not a blanket one-day subtraction.
+- Label the calendar authority in Day. Bundled years 1432–1434 cover 15 April
+  2025–14 April 2028. Dates outside coverage explicitly say unavailable.
+- Retain the existing tithi/sunrise/solar computations. Record calendar sources
+  and the distinction between Drik, traditional West Bengal, and Bangladesh.
+- Add reported-date, boundary, full-coverage, timezone and unavailable-date tests.
+- Add one Android workflow with automatic bugfix semantic versions, PR betas,
+  stable releases on main, and one ZIP containing `Android/Kalam_<version>.apk`.
+## 1.22.0 beta — keep clocks across reinstalling (9 October 2026)
+
+- Request Android's Keep app data uninstall option on supported phones.
+- Add clock-only JSON backup and restore using the system document picker;
+  a file saved in Downloads survives uninstalling Kalam.
+- Preserve all clock identities, locations, aliases, expanded states and
+  ordering/grouping preferences; restore confirms the count and commits atomically.
+- Reject damaged/foreign/oversized backups before modifying existing data.
+- Document that a backup is needed before uninstalling and that automatic
+  Android restore depends on device backup settings and stable signing identity.
+- Allocate a minor semantic version for this feature. Device reinstall checks
+  are still pending; no claim of unconditional automatic restore is made.

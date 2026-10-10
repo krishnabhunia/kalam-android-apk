@@ -121,7 +121,9 @@ fun WeekPage(s: Settings, f: Fonts, place: Place, zone: ZoneId, weekStart: Local
                     else -> Color.Transparent
                 }
                 // K67/K69 — per-row Bengali date + full-width tithi sub-line (failures hide only this row's extras)
-                val bnRow = remember(d) { try { com.krishna.kalam.core.Bangla.bengaliDate(d, zone) } catch (t: Throwable) { null } }
+                val bnRow = remember(d, zone) { try { com.krishna.kalam.core.Bangla.bengaliDate(d, zone).also {
+                    if (it == null) com.krishna.kalam.core.Logger.e("Bangla", "traditional date unavailable: $d")
+                } } catch (t: Throwable) { com.krishna.kalam.core.Logger.e("Bangla", "date failed", t); null } }
                 val tithRow = remember(d) {
                     try {
                         val sr = (com.krishna.kalam.core.Solar.sunTimes(d, place.lat, place.lon, zone,
@@ -148,6 +150,9 @@ fun WeekPage(s: Settings, f: Fonts, place: Place, zone: ZoneId, weekStart: Local
                             Text("${bnRow.day} ${bnRow.monthEn}", fontSize = f.data,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontStyle = androidx.compose.ui.text.font.FontStyle.Italic, textAlign = TextAlign.Center)
+                        } else {
+                            Text(com.krishna.kalam.core.Bangla.UNAVAILABLE_LABEL, fontSize = f.data,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
                         }
                         if (isToday) Text("today", fontSize = f.data, color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center)

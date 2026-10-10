@@ -6,7 +6,7 @@ import org.junit.Test
 import java.time.LocalDate
 import java.time.ZoneId
 
-/** K67/K68 — golden vectors fetched from drikpanchang (Kolkata, geoname 1275004) at build time. */
+/** Civil dates: traditional West Bengal almanac. Tithi: existing Drik vectors. */
 class BanglaTest {
     private val kol = ZoneId.of("Asia/Kolkata")
 
@@ -24,10 +24,63 @@ class BanglaTest {
         assertEquals(30, b.day); assertEquals(11, b.monthIdx); assertEquals(1432, b.year)
     }
 
-    @Test fun tenSepIsTwentyFourBhadro1433() {
+    @Test fun tenSepIsTwentyThreeBhadro1433() {
         val b = Bangla.bengaliDate(LocalDate.of(2026, 9, 10), kol)!!
-        assertEquals(24, b.day); assertEquals(4, b.monthIdx); assertEquals(1433, b.year)
+        assertEquals(23, b.day); assertEquals(4, b.monthIdx); assertEquals(1433, b.year)
         assertEquals("ভাদ্র", b.monthBn)
+    }
+
+    @Test fun midnaporeReportedDateAndAshwinBoundary() {
+        val vectors = listOf(
+            Triple(LocalDate.of(2026, 9, 18), 31, 4),
+            Triple(LocalDate.of(2026, 9, 19), 1, 5),
+            Triple(LocalDate.of(2026, 9, 28), 10, 5),
+            Triple(LocalDate.of(2026, 10, 9), 21, 5)
+        )
+        for ((date, day, month) in vectors) {
+            assertEquals(date.toString(), Bangla.BDate(day, month, 1433), Bangla.bengaliDate(date, kol))
+        }
+    }
+
+    @Test fun civilCalendarDoesNotChangeWithViewingTimezone() {
+        val date = LocalDate.of(2026, 10, 9)
+        for (zone in listOf("Asia/Kolkata", "Asia/Dhaka", "UTC", "America/New_York")) {
+            assertEquals(Bangla.BDate(21, 5, 1433), Bangla.bengaliDate(date, ZoneId.of(zone)))
+        }
+    }
+
+    @Test fun unsupportedDatesDoNotSilentlyUseAnotherCalendar() {
+        assertNull(Bangla.bengaliDate(LocalDate.of(1900, 1, 1), kol))
+        assertNull(Bangla.bengaliDate(LocalDate.of(2100, 1, 1), kol))
+        assertNull(Bangla.boishakh1(2100, kol))
+    }
+
+    @Test fun allBundledAlmanacDaysAndYearRollovers() {
+        val fixture = javaClass.getResourceAsStream("/traditional-months.json")!!
+            .bufferedReader().use { it.readText() }
+        val rows = Regex("\"year\": (\\d+),\\s*\"month\": (\\d+),\\s*\"start\": \"([0-9-]+)\",\\s*\"days\": (\\d+)")
+            .findAll(fixture).toList()
+        assertEquals(36, rows.size)
+        var expectedNext: LocalDate? = null
+        for (row in rows) {
+            val (year, month, startText, daysText) = row.destructured
+            val start = LocalDate.parse(startText)
+            val days = daysText.toInt()
+            expectedNext?.let { assertEquals(it, start) }
+            for (offset in 0 until days) {
+                val date = start.plusDays(offset.toLong())
+                assertEquals(date.toString(), Bangla.BDate(offset + 1, month.toInt(), year.toInt()),
+                    Bangla.bengaliDate(date, kol))
+            }
+            expectedNext = start.plusDays(days.toLong())
+        }
+        assertNull(Bangla.bengaliDate(LocalDate.of(2025, 4, 14), kol))
+        assertNull(Bangla.bengaliDate(expectedNext!!, kol))
+    }
+
+    @Test fun ashwinKartikRolloverUsesItsOwnBoundary() {
+        assertEquals(Bangla.BDate(30, 5, 1433), Bangla.bengaliDate(LocalDate.of(2026, 10, 18), kol))
+        assertEquals(Bangla.BDate(1, 6, 1433), Bangla.bengaliDate(LocalDate.of(2026, 10, 19), kol))
     }
 
     @Test fun dayCountContinuity() {
