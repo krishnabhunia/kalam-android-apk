@@ -54,8 +54,8 @@ object Solar {
     fun sunTimes(d: LocalDate, latitude: Double, longitude: Double, zoneId: ZoneId,
                  zenith: Double = ZENITH_GEOMETRIC): SunResult {
         return try {
-            val offsetHours = ZonedDateTime.of(d, java.time.LocalTime.NOON, zoneId)
-                .offset.totalSeconds / 3600.0
+            val noonOffset = ZonedDateTime.of(d, java.time.LocalTime.NOON, zoneId).offset
+            val offsetHours = noonOffset.totalSeconds / 3600.0
             var noonFrac = 0.5
             var decl = 0.0; var eqTime = 0.0
             repeat(2) {
@@ -71,7 +71,11 @@ object Solar {
             if (cosHa < -1.0) return SunResult.NoEvent("Sun never sets on $d at latitude $latitude")
             val haMin = 4.0 * Math.toDegrees(acos(cosHa))
             val noonMin = 720.0 - 4.0 * longitude - eqTime + offsetHours * 60.0
-            val midnight = ZonedDateTime.of(LocalDateTime.of(d, java.time.LocalTime.MIDNIGHT), zoneId)
+            // noonMin/haMin are wall-clock minutes at the NOON offset. Anchor midnight on that same
+            // offset: on DST-change days midnight's own offset differs and shifted both events by 1 h.
+            // Zones without DST (all India vectors) are unchanged.
+            val midnight = LocalDateTime.of(d, java.time.LocalTime.MIDNIGHT).atOffset(noonOffset)
+                .atZoneSameInstant(zoneId)
             SunResult.Times(
                 midnight.plusSeconds(((noonMin - haMin) * 60.0).toLong()),
                 midnight.plusSeconds(((noonMin + haMin) * 60.0).toLong())

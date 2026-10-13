@@ -30,6 +30,27 @@ class SolarTest {
         }
         assertEquals(rows.size, checked)
     }
+    /** Clock minutes are on the noon offset; anchoring them at midnight's offset shifted DST-change days by 1 h. */
+    @Test fun daylightSavingChangeDaysAreNotShiftedByAnHour() {
+        fun minutes(t: java.time.ZonedDateTime) = t.hour * 60 + t.minute
+        for ((zone, lat, lon, change) in listOf(
+            Quad("America/New_York", 40.7128, -74.0060, LocalDate.of(2026, 3, 8)),
+            Quad("America/New_York", 40.7128, -74.0060, LocalDate.of(2026, 11, 1)),
+            Quad("Europe/London", 51.5072, -0.1276, LocalDate.of(2026, 3, 29)),
+            Quad("Europe/London", 51.5072, -0.1276, LocalDate.of(2026, 10, 25)))) {
+            val z = ZoneId.of(zone)
+            val on = Solar.sunTimes(change, lat, lon, z) as Solar.SunResult.Times
+            val next = Solar.sunTimes(change.plusDays(1), lat, lon, z) as Solar.SunResult.Times
+            // Both days share the post-change offset, so wall-clock times differ by ~1–3 min, never ~60.
+            assertTrue("$zone $change sunrise ${on.sunrise} vs ${next.sunrise}",
+                abs(minutes(on.sunrise) - minutes(next.sunrise)) <= 4)
+            assertTrue("$zone $change sunset ${on.sunset} vs ${next.sunset}",
+                abs(minutes(on.sunset) - minutes(next.sunset)) <= 4)
+            assertEquals(change, on.sunrise.toLocalDate())
+        }
+    }
+    private data class Quad(val zone: String, val lat: Double, val lon: Double, val date: LocalDate)
+
     @Test fun polarGuard() {
         val res = Solar.sunTimes(LocalDate.of(2026, 12, 21), 78.0, 15.0, ZoneId.of("UTC"))
         assertTrue(res is Solar.SunResult.NoEvent)

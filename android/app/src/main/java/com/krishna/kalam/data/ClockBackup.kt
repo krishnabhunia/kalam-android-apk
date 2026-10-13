@@ -17,6 +17,7 @@ data class ClockArchive(val clocks: List<ClockPlace>, val sort: String, val grou
 
 object ClockBackup {
     const val MAX_BYTES = 1024 * 1024
+    private const val MAX_NESTING = 8
     private const val FORMAT = "kalam-clocks"
     private val sorts = setOf("ADDED", "NAME", "TIME", "COUNTRY", "TEMP", "AQI", "HUM")
     private val groups = setOf("NONE", "COUNTRY", "CONTINENT", "COUNTRY_STATE",
@@ -37,6 +38,33 @@ object ClockBackup {
             require(clock.lon.isFinite() && clock.lon in -180.0..180.0)
             ZoneId.of(clock.tz)
         }
+        // The Clocks list keys rows by location; two clocks on one key crash it every time it opens.
+        val keys = archive.clocks.map { com.krishna.kalam.ui.Geo.key(it.lat, it.lon) }
+        require(keys.toSet().size == keys.size) { "Duplicate clock location" }
+    }
+
+    /**
+     * Deepest {…}/[…] nesting outside strings; a Kalam backup needs 3. Android's org.json also
+     * accepts 'single-quoted' strings and comments, which could hide brackets from this scan, so
+     * any of those outside a "string" counts as unlimited (Kalam never writes them).
+     */
+    internal fun nesting(raw: String): Int {
+        var depth = 0; var max = 0; var inString = false; var escaped = false
+        for (c in raw) {
+            if (inString) {
+                if (escaped) escaped = false
+                else if (c == '\\') escaped = true
+                else if (c == '"') inString = false
+                continue
+            }
+            when (c) {
+                '"' -> inString = true
+                '\'', '/', '#' -> return Int.MAX_VALUE
+                '{', '[' -> { depth++; if (depth > max) max = depth }
+                '}', ']' -> if (depth > 0) depth--
+            }
+        }
+        return max
     }
 
     fun encode(archive: ClockArchive): String {
@@ -54,8 +82,14 @@ object ClockBackup {
 
     fun decode(raw: String): ClockArchive {
         require(raw.toByteArray(Charsets.UTF_8).size <= MAX_BYTES) { "Backup too large" }
+        // A file of nested brackets made the recursive JSON parser throw StackOverflowError,
+        // an Error the restore screen does not catch — choosing such a file crashed Kalam.
+        require(nesting(raw) <= MAX_NESTING) { "Invalid backup document" }
         val tokener = JSONTokener(raw)
-        val value = tokener.nextValue()
+        // Defence in depth: never let a parser stack overflow (an Error) escape the restore screen.
+        val value = try { tokener.nextValue() } catch (e: StackOverflowError) {
+            throw IllegalArgumentException("Invalid backup document")
+        }
         require(value is JSONObject && tokener.nextClean() == '\u0000') { "Invalid backup document" }
         val root = value
         require(root.get("format") == FORMAT && root.get("version") == 1) { "Unsupported backup" }

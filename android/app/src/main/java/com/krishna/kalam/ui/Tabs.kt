@@ -124,7 +124,7 @@ fun WeekPage(s: Settings, f: Fonts, place: Place, zone: ZoneId, weekStart: Local
                 val bnRow = remember(d, zone) { try { com.krishna.kalam.core.Bangla.bengaliDate(d, zone).also {
                     if (it == null) com.krishna.kalam.core.Logger.e("Bangla", "traditional date unavailable: $d")
                 } } catch (t: Throwable) { com.krishna.kalam.core.Logger.e("Bangla", "date failed", t); null } }
-                val tithRow = remember(d) {
+                val tithRow = remember(d, place.lat, place.lon, zone) {
                     try {
                         val sr = (com.krishna.kalam.core.Solar.sunTimes(d, place.lat, place.lon, zone,
                             com.krishna.kalam.core.Solar.ZENITH_OBSERVATIONAL) as? com.krishna.kalam.core.Solar.SunResult.Times)?.sunrise
@@ -365,7 +365,7 @@ fun GirlForm(s: Settings, f: Fonts, onClear: () -> Unit) {
             if (s.girlTobUnknown) "Unknown \u2014 12:00 assumed" else s.girlTob.ifBlank { "Select" }, f) {
             if (s.girlTobUnknown) return@FieldRow
             TimePickerDialog(ctx, { _, h, m ->
-                scope.launch { Prefs.writeSettings(ctx, Prefs.readSettings(ctx).copy(girlTob = "%02d:%02d".format(h, m))) }
+                scope.launch { Prefs.writeSettings(ctx, Prefs.readSettings(ctx).copy(girlTob = com.krishna.kalam.core.BirthInput.hhmm(h, m))) }
             }, 12, 0, true).show()
         }
         Row(verticalAlignment = Alignment.CenterVertically) {

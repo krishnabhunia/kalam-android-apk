@@ -16,6 +16,7 @@ import androidx.core.app.NotificationCompat
 import com.krishna.kalam.R
 import com.krishna.kalam.core.*
 import com.krishna.kalam.data.Prefs
+import com.krishna.kalam.data.Settings
 import kotlinx.coroutines.*
 import java.time.LocalDate
 import java.time.ZoneId
@@ -105,7 +106,8 @@ class AlarmActionReceiver : BroadcastReceiver() {
         SoundService.stop(ctx)
         try {
             val nm = ctx.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            for (id in AlarmScheduler.SKY_CODES) nm.cancel(200 + id)
+            // Snoozed fires post on 210–213; cancelling only 206–209 left an unswipeable ongoing card.
+            for (id in AlarmScheduler.ALARM_NOTIFICATION_IDS) nm.cancel(id)
         } catch (t: Throwable) { Logger.e("Alarm", "dismiss cancel failed", t) }
     }
 }
@@ -140,17 +142,20 @@ object AlarmScheduler {
         return Build.VERSION.SDK_INT < 31 || am.canScheduleExactAlarms()
     }
 
-    fun rearmToday(ctx: Context) {
+    /** [onDone] runs after arming finishes (or fails) — receivers use it to end goAsync(). */
+    fun rearmToday(ctx: Context, onDone: (() -> Unit)? = null) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val s = Prefs.readSettings(ctx)
-                val place = Prefs.resolvePlace(ctx, s.activePlaceId) ?: run {
-                    Logger.e("Alarm", "active place unresolvable — skipping arm"); return@launch
-                }
+                // Same chain as the main screen: a deleted/dangling active id used to return here
+                // silently, so no alarm was ever armed again while the bells still showed as on.
+                val place = Prefs.activePlace(ctx, s)
+                if (place.id != s.activePlaceId) Logger.e("Alarm", "active place ${s.activePlaceId} missing — using ${place.id}")
                 val zone = ZoneId.of(place.tz)
                 val today = LocalDate.now(zone)
-                val day = Engine.computeDay(today, place.lat, place.lon, zone, s.alarmConvention)
                 val am = ctx.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+                armNextDay(ctx, am, ZonedDateTime.now(zone), anyAlarmEnabled(s))
+                val day = Engine.computeDay(today, place.lat, place.lon, zone, s.alarmConvention)
                 for (k in Kalam.entries) for (end in listOf(false, true)) cancelSlot(ctx, am, k, end)
                 for (c in listOf(CODE_SUNRISE, CODE_SUNSET, CODE_MOONRISE, CODE_MOONSET)) am.cancel(pendingCode(ctx, c, "", ""))   // K76/K77
                 if (day !is DayResult.Ok) { Logger.e("Alarm", "day unavailable — nothing armed"); return@launch }
@@ -190,6 +195,38 @@ object AlarmScheduler {
                     }
                 }
             } catch (t: Throwable) { Logger.e("Alarm", "rearm failed", t) }
+            finally { try { onDone?.invoke() } catch (t: Throwable) { Logger.e("Alarm", "rearm callback failed", t) } }
+        }
+    }
+
+    /**
+     * D8 keeps arming to *today*. DATE_CHANGED is not delivered to manifest receivers on
+     * Android 8+, and the in-app 30 s ticker only runs while Kalam is open, so after the
+     * process was killed nothing armed the next day. This self-alarm re-arms just after
+     * the place's midnight; it is re-set by every rearm, so there is only ever one.
+     */
+    fun nextDayRearmAt(now: ZonedDateTime): ZonedDateTime =
+        now.toLocalDate().plusDays(1).atStartOfDay(now.zone).plusSeconds(REARM_DELAY_SECS)
+
+    /** Any alert that could ring tomorrow; with none, the phone is not woken at midnight. */
+    fun anyAlarmEnabled(s: Settings): Boolean =
+        s.sunriseAlarm || s.sunsetAlarm || s.moonriseAlarm || s.moonsetAlarm ||
+            Kalam.entries.any { k -> s.visible[k] == true && (s.startSlots[k]?.enabled == true || s.endSlots[k] == true) }
+
+    private fun armNextDay(ctx: Context, am: AlarmManager, now: ZonedDateTime, needed: Boolean) {
+        val pi = PendingIntent.getBroadcast(ctx, CODE_REARM,
+            Intent(ctx, BootReceiver::class.java).setAction(ACTION_REARM),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        if (!needed) { am.cancel(pi); return }
+        val at = nextDayRearmAt(now)
+        val t = at.toInstant().toEpochMilli()
+        try {
+            if (exactAllowed(ctx)) am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, t, pi)
+            else am.setWindow(AlarmManager.RTC_WAKEUP, t, 10 * 60 * 1000, pi)
+        } catch (se: SecurityException) {
+            Logger.e("Alarm", "SecurityException arming next-day rearm — inexact", se)
+            try { am.setWindow(AlarmManager.RTC_WAKEUP, t, 10 * 60 * 1000, pi) }
+            catch (t2: Throwable) { Logger.e("Alarm", "next-day rearm could not be armed", t2) }
         }
     }
 
@@ -206,6 +243,12 @@ object AlarmScheduler {
     fun snoozeCodeOf(code: Int) = code + 4          // 6..9 -> 10..13
     fun baseCodeOf(code: Int) = if (code in 10..13) code - 4 else code
     val SNOOZE_CODES = SKY_CODES.map { snoozeCodeOf(it) }.toSet()
+    /** Every ongoing alarm notification (original 206–209 and snoozed 210–213). */
+    val ALARM_NOTIFICATION_IDS = (SKY_CODES + SNOOZE_CODES).map { 200 + it }.toSet()
+    /** Next-day self re-arm (see [nextDayRearmAt]); outside kalam 0–5, sky 6–9 and snooze 10–13. */
+    const val CODE_REARM = 14
+    const val ACTION_REARM = "com.krishna.kalam.REARM_NEXT_DAY"
+    const val REARM_DELAY_SECS = 30L
     const val MAX_SNOOZE = 3
     val SNOOZE_MINUTES = listOf(5, 10, 15)
 
@@ -289,9 +332,10 @@ class AlarmReceiver : BroadcastReceiver() {
             val seq = intent.getIntExtra("seq", 0)   // K79 — snooze sequence
             // K64 — idempotent: same slot, same day, delivered twice ⇒ second one is dropped
             val today = try {
-                val s0 = kotlinx.coroutines.runBlocking { Prefs.readSettings(ctx) }
-                val pl = kotlinx.coroutines.runBlocking { Prefs.resolvePlace(ctx, s0.activePlaceId) }
-                LocalDate.now(ZoneId.of(pl?.tz ?: "UTC"))
+                // Same place chain as rearmToday — a dangling id used to fall back to UTC, so the
+                // ledger day and the armed day differed between 00:00 and 05:30 IST.
+                val pl = kotlinx.coroutines.runBlocking { Prefs.activePlace(ctx, Prefs.readSettings(ctx)) }
+                LocalDate.now(ZoneId.of(pl.tz))
             } catch (_: Throwable) { LocalDate.now() }
             if (!FiredLedger.markIfNew(ctx, id, today, seq)) {
                 Logger.e("AlarmReceiver", "duplicate fire suppressed: slot $id $today"); return
@@ -311,14 +355,19 @@ class AlarmReceiver : BroadcastReceiver() {
             } else {
                 Notifs.post(ctx, 100 + id, title, body)
             }
+            // Keep the (often cold) process alive until the sound has started and re-arming is done.
+            val pending = goAsync()
             CoroutineScope(Dispatchers.IO).launch {
+                var handedOff = false
                 try {
                     val s = Prefs.readSettings(ctx)
                     // K78 — sky alarms always ring (never gated by the kalam start/end style flags)
                     val wantSound = sky || (if (isEnd) s.endStyleSound else s.startStyleSound)
                     if (wantSound) SoundService.start(ctx, s.ringSeconds, title, alarmMode = sky)
-                    AlarmScheduler.rearmToday(ctx)   // keep the day's remaining slots armed
+                    AlarmScheduler.rearmToday(ctx) { pending.finish() }   // keep the day's remaining slots armed
+                    handedOff = true
                 } catch (t: Throwable) { Logger.e("AlarmReceiver", "post-fire work failed", t) }
+                finally { if (!handedOff) pending.finish() }
             }
         } catch (t: Throwable) { Logger.e("AlarmReceiver", "onReceive failed", t) }
     }
@@ -327,10 +376,23 @@ class AlarmReceiver : BroadcastReceiver() {
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(ctx: Context, intent: Intent) {
         val a = intent.action ?: return
-        if (a == Intent.ACTION_BOOT_COMPLETED || a == Intent.ACTION_TIMEZONE_CHANGED ||
-            a == Intent.ACTION_TIME_CHANGED || a == Intent.ACTION_DATE_CHANGED) {
-            AlarmScheduler.rearmToday(ctx)
+        if (a in REARM_ACTIONS) {
+            // The process is often cold here (midnight, boot, after an update); goAsync keeps it
+            // alive until arming has actually finished instead of returning straight away.
+            val pending = goAsync()
+            // TIME_SET/DATE/TZ can arrive often on some phones; logging them would flush real errors.
+            if (a in LOGGED_ACTIONS) Logger.e("Alarm", "rearm requested by ${a.substringAfterLast('.')}")
+            AlarmScheduler.rearmToday(ctx) { pending.finish() }
         }
+    }
+
+    companion object {
+        /** MY_PACKAGE_REPLACED: an installed update (in-app updater) re-arms with the new code. */
+        val REARM_ACTIONS = setOf(Intent.ACTION_BOOT_COMPLETED, Intent.ACTION_TIMEZONE_CHANGED,
+            Intent.ACTION_TIME_CHANGED, Intent.ACTION_DATE_CHANGED, Intent.ACTION_MY_PACKAGE_REPLACED,
+            AlarmScheduler.ACTION_REARM)
+        private val LOGGED_ACTIONS = setOf(Intent.ACTION_BOOT_COMPLETED, Intent.ACTION_MY_PACKAGE_REPLACED,
+            AlarmScheduler.ACTION_REARM)
     }
 }
 

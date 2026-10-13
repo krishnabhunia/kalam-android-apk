@@ -159,11 +159,9 @@ fun SettingsScreen(committed: Settings, f0: Fonts, saved: List<Place>, onBack: (
                         Segmented(draft.weekConvention, f) { draft = draft.copy(weekConvention = it) }
                         Label("Kalam duration", f)
                         // K38 — option labels are live examples: today's real duration in both formats
-                        val todayMins = remember(draft.activePlaceId, saved) {
+                        val todayMins = remember(draft.activePlaceId, draft.defaultPlaceId, draft.alarmConvention, saved) {
                             try {
-                                val pl = Cities.byId(draft.activePlaceId)
-                                    ?: saved.find { it.id == draft.activePlaceId }
-                                    ?: Cities.byId(draft.defaultPlaceId) ?: Cities.BUNDLED[5]
+                                val pl = PlaceRules.resolve(draft, saved)
                                 val res = com.krishna.kalam.core.Engine.computeDay(LocalDate.now(),
                                     pl.lat, pl.lon, java.time.ZoneId.of(pl.tz), draft.alarmConvention)
                                 (res as? com.krishna.kalam.core.DayResult.Ok)?.spans?.firstOrNull()
@@ -253,16 +251,17 @@ fun SettingsScreen(committed: Settings, f0: Fonts, saved: List<Place>, onBack: (
                         OutlinedTextField(value = bname, onValueChange = { bname = it; draft = draft.copy(boyName = it) },
                             label = { Text("Name", fontSize = f.data) }, modifier = Modifier.fillMaxWidth(), singleLine = true)
                         RowNav("DOB", fmtDate(draft.boyDob), f) {
-                            val base = LocalDate.parse(draft.boyDob)
+                            // Blank on a fresh install (K84) — parsing it directly crashed the app.
+                            val base = com.krishna.kalam.core.BirthInput.dateOr(draft.boyDob)
                             android.app.DatePickerDialog(ctx, { _, y, m, d ->
                                 draft = draft.copy(boyDob = LocalDate.of(y, m + 1, d).toString())
                             }, base.year, base.monthValue - 1, base.dayOfMonth).show()
                         }
                         RowNav("TOB \u00b7 IST", draft.boyTob, f) {
-                            val parts = draft.boyTob.split(":")
+                            val (h0, m0) = com.krishna.kalam.core.BirthInput.timeOr(draft.boyTob)
                             android.app.TimePickerDialog(ctx, { _, h, m ->
-                                draft = draft.copy(boyTob = "%02d:%02d".format(h, m))
-                            }, parts[0].toInt(), parts[1].toInt(), true).show()
+                                draft = draft.copy(boyTob = com.krishna.kalam.core.BirthInput.hhmm(h, m))
+                            }, h0, m0, true).show()
                         }
                         var pob by remember(draft.boyPob) { mutableStateOf(draft.boyPob) }
                         OutlinedTextField(value = pob, onValueChange = { pob = it; draft = draft.copy(boyPob = it) },
@@ -751,6 +750,7 @@ fun SavedManager(saved: List<Place>, s: Settings, f: Fonts, onBack: () -> Unit) 
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     var undo by remember { mutableStateOf<Place?>(null) }
+    var undoIds by remember { mutableStateOf<Pair<Settings, Settings>?>(null) }   // before/after the delete
     var renaming by remember { mutableStateOf<Place?>(null) }
     Column(Modifier.fillMaxSize()) {
         BackBar("Saved locations", f, onBack) {
@@ -773,12 +773,22 @@ fun SavedManager(saved: List<Place>, s: Settings, f: Fonts, onBack: () -> Unit) 
                     Text("\uD83D\uDDD1", fontSize = f.data, color = Palette.red,
                         modifier = Modifier.clickable {
                             scope.launch {
-                                Prefs.updateSaved(ctx, saved - p)
-                                undo = p
-                                if (s.activePlaceId == p.id) {
-                                    Prefs.writeSettings(ctx, Prefs.readSettings(ctx).copy(activePlaceId = s.defaultPlaceId))
-                                    AlarmScheduler.rearmToday(ctx)
-                                    Logger.e("Saved", "active location deleted — fell back to default")
+                                try {
+                                    Prefs.updateSaved(ctx, saved - p)
+                                    undo = p; undoIds = null
+                                    // The deleted place may be the active AND/OR the default one; leaving
+                                    // either id dangling used to stop every alarm without any warning.
+                                    val before = Prefs.readSettings(ctx)
+                                    val after = PlaceRules.afterDelete(before, p.id)
+                                    if (after != before) {
+                                        Prefs.writeSettings(ctx, after)
+                                        undoIds = before to after
+                                        AlarmScheduler.rearmToday(ctx)
+                                        Logger.e("Saved", "deleted place was active/default — now ${after.activePlaceId}/${after.defaultPlaceId}")
+                                    }
+                                } catch (t: Exception) {
+                                    if (t is kotlinx.coroutines.CancellationException) throw t
+                                    Logger.e("Saved", "delete failed", t)
                                 }
                             }
                         }.padding(6.dp))
@@ -793,7 +803,19 @@ fun SavedManager(saved: List<Place>, s: Settings, f: Fonts, onBack: () -> Unit) 
                 Text("Deleted \"${p.name}\"", fontSize = f.data, color = MaterialTheme.colorScheme.inverseOnSurface)
                 Text("UNDO", fontSize = f.data, fontWeight = FontWeight.Bold, color = Color(0xFFFFD27A),
                     modifier = Modifier.clickable {
-                        scope.launch { Prefs.addSaved(ctx, p); undo = null }
+                        scope.launch {
+                            try {
+                                Prefs.addSaved(ctx, p)
+                                undoIds?.let { (before, after) ->
+                                    Prefs.writeSettings(ctx, PlaceRules.afterUndo(Prefs.readSettings(ctx), before, after))
+                                    AlarmScheduler.rearmToday(ctx)
+                                }
+                            } catch (t: Exception) {
+                                if (t is kotlinx.coroutines.CancellationException) throw t
+                                Logger.e("Saved", "undo failed", t)
+                            }
+                            undo = null; undoIds = null
+                        }
                     })
             }
         }
