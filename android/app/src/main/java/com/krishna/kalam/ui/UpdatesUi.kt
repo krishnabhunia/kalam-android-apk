@@ -29,6 +29,7 @@ fun UpdatesControls(f: Fonts, expanded: Boolean, onToggle: () -> Unit) {
     val lastCheck by UpdateChecks.lastCheck.collectAsState()
     var dailyChecks by remember { mutableStateOf(UpdateChecks.dailyEnabled(ctx)) }
     var error by remember { mutableStateOf<String?>(null) }
+    var verifying by remember { mutableStateOf(false) }   // double taps / Download during verify
     GroupBox("App updates", f, expanded, onToggle) {
         Text("Installed version: ${AppVersion.NAME}", fontSize = f.data)
         RowToggle("Check for updates every day", dailyChecks, f) { enabled -> scope.launch {
@@ -67,13 +68,17 @@ fun UpdatesControls(f: Fonts, expanded: Boolean, onToggle: () -> Unit) {
         }
         if (status.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
         status.release?.takeIf { includeBeta || !it.beta }?.let { release ->
-            Button(enabled = !status.busy, onClick = { scope.launch { GitHubUpdates.download(ctx, release) } }) {
+            Button(enabled = !status.busy && !verifying, onClick = { scope.launch { GitHubUpdates.download(ctx, release) } }) {
                 Text("Download v${release.version}", fontSize = f.data)
             }
             status.apk?.let { apk ->
-                Button(enabled = !status.busy, onClick = {
+                Button(enabled = !status.busy && !verifying, onClick = { scope.launch {
+                    verifying = true
                     try {
-                        GitHubUpdates.verify(ctx, apk, release.version)
+                        // Parsing and hashing a ~10 MB APK on the main thread risked an ANR.
+                        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                            GitHubUpdates.verify(ctx, apk, release.version)
+                        }
                         if (Build.VERSION.SDK_INT >= 26 && !ctx.packageManager.canRequestPackageInstalls()) {
                             ctx.startActivity(Intent(android.provider.Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
                                 Uri.parse("package:${ctx.packageName}")))
@@ -85,10 +90,11 @@ fun UpdatesControls(f: Fonts, expanded: Boolean, onToggle: () -> Unit) {
                             Logger.e("Updates", "opened Android installer ${release.version}")
                         }
                     } catch (e: Exception) {
+                        if (e is CancellationException) throw e
                         Logger.e("Updates", "installer could not open", e)
                         error = e.message ?: "Could not open Android's installer."
-                    }
-                }) { Text("Install v${release.version}", fontSize = f.data) }
+                    } finally { verifying = false }
+                } }) { Text("Install v${release.version}", fontSize = f.data) }
             }
             TextButton(onClick = {
                 try { ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(release.url))) }

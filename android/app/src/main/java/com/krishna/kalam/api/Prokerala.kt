@@ -1,6 +1,7 @@
 package com.krishna.kalam.api
 
 import android.content.Context
+import com.krishna.kalam.core.BirthInput
 import com.krishna.kalam.core.Logger
 import com.krishna.kalam.data.Prefs
 import kotlinx.coroutines.Dispatchers
@@ -34,9 +35,14 @@ object Prokerala {
         data class Err(val message: String) : Outcome()
     }
 
+    // Without timeouts a stalled network left the Match button spinning indefinitely.
+    private const val CONNECT_TIMEOUT_MS = 15_000
+    private const val READ_TIMEOUT_MS = 30_000
+
     private suspend fun fetchToken(id: String, secret: String): String? = withContext(Dispatchers.IO) {
         try {
             val c = URL("https://api.prokerala.com/token").openConnection() as HttpURLConnection
+            c.connectTimeout = CONNECT_TIMEOUT_MS; c.readTimeout = READ_TIMEOUT_MS
             c.requestMethod = "POST"; c.doOutput = true
             c.setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
             val body = "grant_type=client_credentials&client_id=" +
@@ -53,7 +59,10 @@ object Prokerala {
 
     fun cacheKey(bDob: String, bTob: String, bLat: Double, bLon: Double,
                  gDob: String, gTob: String, gLat: Double, gLon: Double): String {
-        val s = "$bDob|$bTob|$bLat|$bLon|$gDob|$gTob|$gLat|$gLon|2"
+        // ASCII times hash exactly as before; legacy native-digit times map to the same key.
+        val bt = BirthInput.normalizeTime(bTob) ?: bTob
+        val gt = BirthInput.normalizeTime(gTob) ?: gTob
+        val s = "$bDob|$bt|$bLat|$bLon|$gDob|$gt|$gLat|$gLon|2"
         return MessageDigest.getInstance("SHA-1").digest(s.toByteArray())
             .joinToString("") { "%02x".format(it) }.take(20)
     }
@@ -67,18 +76,25 @@ object Prokerala {
         }
         if (clientId.isBlank() || clientSecret.isBlank())
             return Outcome.Err("Add Prokerala credentials in settings first.")
+        val bTime = BirthInput.normalizeTime(bTob)
+        val gTime = BirthInput.normalizeTime(gTob)
+        if (bTime == null || gTime == null) {
+            Logger.e("Prokerala", "time of birth not HH:mm — request not sent")
+            return Outcome.Err("Set a valid time of birth for both people.")
+        }
         if (token == null || System.currentTimeMillis() > tokenExpiry)
             token = fetchToken(clientId, clientSecret)
                 ?: return Outcome.Err("Could not authenticate with Prokerala. Check credentials and network.")
         return withContext(Dispatchers.IO) {
             try {
                 fun enc(s: String) = URLEncoder.encode(s, "UTF-8")
-                val gdt = enc("${gDob}T${gTob}:00+05:30")
-                val bdt = enc("${bDob}T${bTob}:00+05:30")
+                val gdt = enc("${gDob}T${gTime}:00+05:30")
+                val bdt = enc("${bDob}T${bTime}:00+05:30")
                 val url = "https://api.prokerala.com/v2/astrology/kundli-matching/advanced?ayanamsa=1" +
                         "&girl_coordinates=$gLat,$gLon&girl_dob=$gdt" +
                         "&boy_coordinates=$bLat,$bLon&boy_dob=$bdt"
                 val c = URL(url).openConnection() as HttpURLConnection
+                c.connectTimeout = CONNECT_TIMEOUT_MS; c.readTimeout = READ_TIMEOUT_MS
                 c.setRequestProperty("Authorization", "Bearer $token")
                 if (c.responseCode == 401) {
                     token = null; Logger.e("Prokerala", "401 — token invalidated")

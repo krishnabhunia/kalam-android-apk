@@ -144,9 +144,7 @@ fun Root() {
         }
     }
 
-    val place = Cities.byId(settings.activePlaceId)
-        ?: saved.find { it.id == settings.activePlaceId }
-        ?: Cities.byId(settings.defaultPlaceId) ?: Cities.BUNDLED[5]
+    val place = PlaceRules.resolve(settings, saved)   // same chain as AlarmScheduler.rearmToday
 
     // K31 — back walks the chain; only MAIN exits (system default handles that).
     when (screen) {
@@ -300,7 +298,8 @@ fun DayTab(s: Settings, f: Fonts, place: Place, today: LocalDate) {
                 val bnDate = remember(viewDate, zone) { try { com.krishna.kalam.core.Bangla.bengaliDate(viewDate, zone).also {
                     if (it == null) com.krishna.kalam.core.Logger.e("Bangla", "traditional date unavailable: $viewDate")
                 } } catch (t: Throwable) { com.krishna.kalam.core.Logger.e("Bangla", "date failed", t); null } }
-                val tith = remember(viewDate) {
+                // Tithi depends on the place's sunrise and zone, not only the date (stale after a city switch).
+                val tith = remember(viewDate, place.lat, place.lon, zone) {
                     try {
                         val sr = (com.krishna.kalam.core.Solar.sunTimes(viewDate, place.lat, place.lon, zone,
                             com.krishna.kalam.core.Solar.ZENITH_OBSERVATIONAL) as? com.krishna.kalam.core.Solar.SunResult.Times)?.sunrise

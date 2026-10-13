@@ -52,6 +52,18 @@ class ReleasePolicyTest {
         assertThrows(IllegalArgumentException::class.java) { verify(code = 29) }
         assertThrows(IllegalArgumentException::class.java) { verify(name = "1.22.0") }
     }
+    @Test fun rotatedKeyIsAcceptedOnlyWhenItsLineageContainsTheInstalledCertificate() {
+        val old = setOf("415527987baa3502a6be573392e6303ac07f843a3cfd6075d94618867c171bf9")
+        val new = setOf("04a523b9caabeee3b6dca1cc351833096d9fedd4c1df5db91e5d7770ee5e95d5")
+        // v3 key rotation: new signer, proof-of-rotation lineage old → new. Android accepts it.
+        ReleasePolicy.validateApk("com.krishna.kalam", "com.krishna.kalam", 34, 33, "1.24.0", "1.24.0", new, old, old + new)
+        assertTrue(ReleasePolicy.signingAccepted(new, old + new, old))
+        // A different key without that lineage is still refused, as is an empty or multi-signer mismatch.
+        assertFalse(ReleasePolicy.signingAccepted(new, new, old))
+        assertFalse(ReleasePolicy.signingAccepted(emptySet(), old, old))
+        assertFalse(ReleasePolicy.signingAccepted(old + new, old + new, old))
+        assertTrue(ReleasePolicy.signingAccepted(old + new, old + new, old + new))
+    }
     @Test fun archiveExtractorRejectsForeignPayloads() {
         val dir = kotlin.io.path.createTempDirectory("update-test").toFile()
         try {

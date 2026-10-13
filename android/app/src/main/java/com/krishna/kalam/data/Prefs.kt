@@ -1,6 +1,7 @@
 package com.krishna.kalam.data
 
 import android.content.Context
+import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
 import com.krishna.kalam.core.Convention
@@ -25,6 +26,29 @@ object Cities {
         Place("c_pune", "Pune", 18.5204, 73.8567, "Asia/Kolkata", false)
     )
     fun byId(id: String): Place? = BUNDLED.find { it.id == id }
+    /** Last resort when both the active and the default place are gone (Kolkata, as before). */
+    val FALLBACK: Place = BUNDLED.first { it.id == "c_kolkata" }
+}
+
+/** One place-resolution rule for the screen AND the alarms, so they can never disagree. */
+object PlaceRules {
+    /** Active → default → Kolkata. Previously alarms stopped silently when the active id dangled. */
+    fun resolve(s: Settings, saved: List<Place>): Place {
+        fun find(id: String) = Cities.byId(id) ?: saved.find { it.id == id }
+        return find(s.activePlaceId) ?: find(s.defaultPlaceId) ?: Cities.FALLBACK
+    }
+
+    /** Settings after deleting saved place [id]: neither the active nor the default may point at it. */
+    fun afterDelete(s: Settings, id: String): Settings {
+        val default = if (s.defaultPlaceId == id) Cities.FALLBACK.id else s.defaultPlaceId
+        val active = if (s.activePlaceId == id) default else s.activePlaceId
+        return s.copy(activePlaceId = active, defaultPlaceId = default)
+    }
+
+    /** UNDO of a delete: put back the ids [afterDelete] replaced, unless the user changed them since. */
+    fun afterUndo(current: Settings, before: Settings, after: Settings): Settings = current.copy(
+        activePlaceId = if (current.activePlaceId == after.activePlaceId) before.activePlaceId else current.activePlaceId,
+        defaultPlaceId = if (current.defaultPlaceId == after.defaultPlaceId) before.defaultPlaceId else current.defaultPlaceId)
 }
 
 data class SlotSetting(val enabled: Boolean, val offsetMin: Int)
@@ -99,7 +123,11 @@ data class MatchRecord(val label: String, val score: Double, val approx: Boolean
                        val girlDob: String = "", val cacheKey: String = "",
                        val matrimonyId: String = "", val mobile: String = "")
 
-private val Context.store by preferencesDataStore(name = "kalam_prefs")
+// A damaged prefs file used to throw from every read, so Kalam crashed on each launch until its
+// data was cleared by hand. Reset to defaults instead (clocks can be restored from a backup file).
+private val Context.store by preferencesDataStore(name = "kalam_prefs",
+    corruptionHandler = ReplaceFileCorruptionHandler { e ->
+        Logger.e("Prefs", "settings file corrupt — reset to defaults", e); emptyPreferences() })
 
 object Prefs {
     private val K_SETTINGS = stringPreferencesKey("settings_v1")
@@ -329,4 +357,7 @@ fun clocksFlow(ctx: Context) = ctx.store.data.map { p -> decodeClocks(p[K_CLOCKS
 
     suspend fun resolvePlace(ctx: Context, id: String): Place? =
         Cities.byId(id) ?: readSaved(ctx).find { it.id == id }
+
+    /** The place the main screen shows (and alarms must use) for [s]. */
+    suspend fun activePlace(ctx: Context, s: Settings): Place = PlaceRules.resolve(s, readSaved(ctx))
 }

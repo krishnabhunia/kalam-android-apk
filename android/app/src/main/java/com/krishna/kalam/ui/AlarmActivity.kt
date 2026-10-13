@@ -1,10 +1,13 @@
 package com.krishna.kalam.ui
 
 import android.app.NotificationManager
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.os.Build
 import android.os.Bundle
+import android.os.SystemClock
 import android.view.KeyEvent
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
@@ -20,6 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import com.krishna.kalam.alarm.AlarmScheduler
 import com.krishna.kalam.alarm.SoundService
 import com.krishna.kalam.core.Logger
@@ -36,15 +40,61 @@ class AlarmActivity : ComponentActivity() {
     private var title = "Alarm"
     private var body = ""
 
+    /**
+     * Apps never receive KEYCODE_POWER (the system consumes it), so the power key could not stop
+     * the alarm despite the on-screen promise. Pressing power turns the screen off — stop on that.
+     */
+    private val screenOff = object : BroadcastReceiver() {
+        override fun onReceive(c: Context, i: Intent) {
+            if (i.action != Intent.ACTION_SCREEN_OFF) return
+            // Ignore the normal timeout after the cap (keeps the missed-alarm card) and a pocket/
+            // proximity blank in the first moments after the screen was woken for this alarm.
+            if (capped || SystemClock.elapsedRealtime() - shownAt < SCREEN_OFF_GRACE_MS) return
+            Logger.e("AlarmActivity", "power key — stopping"); stop()
+        }
+    }
+    private var screenOffRegistered = false
+    private var shownAt = 0L
+    private var capped = false
+    /** After the ring cap the sound has stopped; let the screen sleep instead of glowing on the lock screen. */
+    private val releaseScreen = Runnable { capped = true; window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) }
+
     override fun onCreate(b: Bundle?) {
         super.onCreate(b)
         if (Build.VERSION.SDK_INT >= 27) { setShowWhenLocked(true); setTurnScreenOn(true) }
+        else {
+            // API 26 (minSdk) has no setShowWhenLocked — without these the alarm stayed behind the keyguard.
+            @Suppress("DEPRECATION")
+            window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON)
+        }
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        shownAt = SystemClock.elapsedRealtime(); capped = false
+        window.decorView.postDelayed(releaseScreen, SoundService.RING_CAP_SECS * 1000L)
+        try {
+            ContextCompat.registerReceiver(this, screenOff, IntentFilter(Intent.ACTION_SCREEN_OFF),
+                ContextCompat.RECEIVER_NOT_EXPORTED)
+            screenOffRegistered = true
+        } catch (t: Throwable) { Logger.e("AlarmActivity", "screen-off listener failed", t) }
         readExtras(intent)
         setContent { AlarmScreen() }
     }
 
-    override fun onNewIntent(i: Intent) { super.onNewIntent(i); readExtras(i); setContent { AlarmScreen() } }
+    override fun onDestroy() {
+        window.decorView.removeCallbacks(releaseScreen)
+        if (screenOffRegistered) try { unregisterReceiver(screenOff) } catch (_: Throwable) {}
+        screenOffRegistered = false
+        super.onDestroy()
+    }
+
+    override fun onNewIntent(i: Intent) {
+        super.onNewIntent(i); readExtras(i)
+        // A newer alarm (singleTask) gets its own full screen-on window.
+        window.decorView.removeCallbacks(releaseScreen)
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        shownAt = SystemClock.elapsedRealtime(); capped = false
+        window.decorView.postDelayed(releaseScreen, SoundService.RING_CAP_SECS * 1000L)
+        setContent { AlarmScreen() }
+    }
 
     private fun readExtras(i: Intent?) {
         slot = i?.getIntExtra("id", 0) ?: 0
@@ -65,9 +115,9 @@ class AlarmActivity : ComponentActivity() {
         SoundService.stop(this)
         try {
             val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            for (c in AlarmScheduler.SKY_CODES + AlarmScheduler.SNOOZE_CODES) nm.cancel(200 + c)
+            for (id in AlarmScheduler.ALARM_NOTIFICATION_IDS) nm.cancel(id)
         } catch (t: Throwable) { Logger.e("AlarmActivity", "notification cancel failed", t) }
-        finish()
+        if (!isFinishing) finish()
     }
 
     private fun snooze(mins: Int) {
@@ -78,6 +128,8 @@ class AlarmActivity : ComponentActivity() {
         AlarmScheduler.snooze(this, slot, mins, next, title, body)
         stop()
     }
+
+    private companion object { const val SCREEN_OFF_GRACE_MS = 1500L }
 
     @Composable
     private fun AlarmScreen() {

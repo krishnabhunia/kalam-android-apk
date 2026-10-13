@@ -57,9 +57,8 @@ jobs:
         run: |
           mkdir -p package/Android
           cp android/app/build/outputs/apk/release/app-release-unsigned.apk "package/Android/Kalam_${VERSION}.apk"
-          BADGING=$("$ANDROID_HOME/build-tools/34.0.0/aapt" dump badging "package/Android/Kalam_${VERSION}.apk")
-          echo "$BADGING" | head -1
-          echo "$BADGING" | grep "versionCode='$CODE' versionName='$VERSION'"
+          # Also refuses a debuggable or foreign-package APK before it can ever reach the key.
+          python tools/check_apk.py "package/Android/Kalam_${VERSION}.apk" "$CODE" "$VERSION"
           (cd package && zip -r "../Kalam_${VERSION}.zip" Android)
       - name: Upload exactly one directly downloadable ZIP
         if: steps.version.outputs.skip != 'true'
@@ -119,9 +118,7 @@ jobs:
           VERSION: ${{ needs.android.outputs.version }}
           CODE: ${{ needs.android.outputs.code }}
         run: |
-          BADGING=$("$ANDROID_HOME/build-tools/34.0.0/aapt" dump badging "signed/Android/Kalam_${VERSION}.apk")
-          echo "$BADGING" | head -1
-          echo "$BADGING" | grep "versionCode='$CODE' versionName='$VERSION'"
+          python tools/check_apk.py "signed/Android/Kalam_${VERSION}.apk" "$CODE" "$VERSION"
           python - <<'PY'
           import os, pathlib, zipfile
           version = os.environ['VERSION']

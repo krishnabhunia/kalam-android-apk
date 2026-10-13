@@ -924,3 +924,24 @@ Repo krishnabhunia/kalam-calendar exists (public, push OK from Krishna's side) b
   correct package/version/non-debuggable manifest and two identical signing runs
   with a local test key. Permanent production signing setup and real-device
   install/update/data-retention checks remain pending.
+# Audit fixes — Android 9 updater, alarm reliability, crash fixes (13 October 2026)
+
+Follows 1.24.0. Version is allocated by CI from the commit types (fix → patch).
+
+| SrNo. | Area | Fix |
+| --- | --- | --- |
+| 1 | Updater | Android 9: the downloaded APK's certificates were never read (`GET_SIGNATURES` missing), so every update would have been refused as "different signing key". |
+| 2 | Updater | Key rotation (APK Signature Scheme v3) is accepted when the new key's lineage contains the installed certificate; plain key changes are still refused. Verification runs off the main thread with Download/Install disabled meanwhile. A re-check keeps a verified download of the same version. |
+| 3 | CI | `tools/check_apk.py` refuses a debuggable APK, a foreign package or a wrong versionCode/versionName for both the validation and the signed APK; a test pins that only `signed-release` reads secrets and never runs for PRs. |
+| 4 | Crash | Settings → Match → My details → DOB/TOB crashed on a fresh install (blank values, K84) — the state right after the signing-key reinstall. |
+| 5 | Alarms | Deleting the saved place that was active and/or default left a dangling id; `rearmToday` returned silently and no alarm was armed again. Alarms, the fired-ledger day and the main screen now share one place-resolution rule; UNDO restores the previous active/default choice. |
+| 6 | Alarms | Next-day re-arm self-alarm 30 s after the place's midnight, only while some alert is enabled (DATE_CHANGED is not delivered on Android 8+; the 30 s ticker needs the app open). MY_PACKAGE_REPLACED re-arms after an update. BootReceiver and AlarmReceiver keep the process alive (goAsync) until arming has finished. |
+| 7 | Alarms | STOP from the notification/sheet now clears snoozed alarm cards (210–213). Power key stops the alarm (screen-off; ignored after the 60 s cap and for 1.5 s after the screen wakes). API 26 lock-screen flags. The screen may sleep after the cap; the alarm card stays. |
+| 8 | Logs | Logger is initialised in an Application class, so background alarm events reach Error logs. |
+| 9 | Match | Times are written with ASCII digits (Bengali/Marathi phone language produced `০৯:৩০` and an HTTP 400); legacy values are repaired before sending; Prokerala calls time out (15 s/30 s). Cache keys are unchanged. |
+| 10 | Backup | Restore rejects duplicate clock locations (Clocks list crash) and deeply nested or non-standard JSON (single quotes/comments) that made Android's parser overflow its stack (crash). |
+| 11 | Data | A corrupt prefs file resets to defaults instead of crashing on every launch. |
+| 12 | Engines | Solar: DST-change days were shifted by one hour in DST zones (India unchanged; golden vectors still pass). Tithi and the duration preview recompute when the place/convention changes. |
+| 13 | Docs | 1.22/1.23 migration runbook (do **not** keep app data), required reviewer on `android-signing`, clipboard-history warning. |
+
+Local verification: Android unit tests and Python tool tests (see PR). Not verified on a device: everything in DEVICE-CHECKLIST "Audit fixes".

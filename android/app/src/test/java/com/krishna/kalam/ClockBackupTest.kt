@@ -70,6 +70,26 @@ class ClockBackupTest {
         catch (_: java.nio.charset.CharacterCodingException) { }
     }
 
+    @Test fun rejectsDuplicateLocationsThatWouldCrashTheClockList() {
+        val root = JSONObject(raw())
+        val first = root.getJSONArray("clocks").getJSONObject(0)
+        root.getJSONArray("clocks").put(JSONObject(first.toString()).put("alias", "copy"))
+        rejected(root.toString())
+    }
+
+    @Test fun deeplyNestedFileIsRejectedNotAStackOverflowCrash() {
+        // StackOverflowError is not an Exception; the restore screen used to crash on such a file.
+        try { ClockBackup.decode("[".repeat(200_000)); fail("Nested file accepted") }
+        catch (_: IllegalArgumentException) { }
+        // Android's org.json accepts 'single quotes' and comments; brackets hidden in them must not
+        // fool the scan (the reviewer's bypass: closing brackets in a quoted pad, then deep nesting).
+        try { ClockBackup.decode("{'pad':'" + "]".repeat(20_000) + "','b':" + "[".repeat(20_000) + "}"); fail("Bypass accepted") }
+        catch (_: IllegalArgumentException) { }
+        assertEquals(Int.MAX_VALUE, ClockBackup.nesting("{/*[*/}"))
+        assertEquals(3, ClockBackup.nesting(raw()))
+        assertEquals(1, ClockBackup.nesting("{\"a\":\"[[[{{{\\\"\"}"))
+    }
+
     @Test fun fileRoundTripAndEmptyBackup() {
         assertEquals(clocks, ClockBackup.read(raw().byteInputStream()).clocks)
         val empty = ClockBackup.snapshot(emptyList(), Settings())
