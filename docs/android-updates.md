@@ -58,7 +58,12 @@ refs/pull/*/merge cannot access the signing secrets. Signing secrets have been
 removed from repository-wide scope. PR checks produce unsigned beta validation
 APKs and never receive the key. After review, a manual branch build or a main
 build creates the installable signed APK and replaces the validation ZIP,
-leaving exactly one download. It
+leaving exactly one download. Both uploads explicitly name the versioned ZIP
+and enable overwrite. With `archive: false`, omitting the name makes overwrite
+look for the default `artifact` name even though the upload uses the ZIP's
+filename, leaving duplicate downloads. After each upload, the workflow checks
+the run has exactly one artifact with the expected upload ID, name and SHA-256.
+The signed check runs before any tag or release is published. It
 verifies the fingerprint and refuses to publish if configuration is missing or
 incorrect. It never falls back to a new debug key. PR tests/builds use a read-only
 GitHub token; a separate publishing job has release write permission.
