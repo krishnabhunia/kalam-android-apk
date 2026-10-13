@@ -1,3 +1,21 @@
+## 13 October 2026 — correct PR build and instruction compliance
+
+- Keep signing keys in a branch-restricted environment, outside PR jobs.
+  PR validation APKs are unsigned; reviewed manual/main builds are signed.
+- Serialize signed workflows and allocate codes above all signed tags.
+- Clean superseded owned APK cache files only after verified atomic replacement.
+- Configure and verify one protected permanent Android signing key; no private
+  key or password is committed. Retain a local Windows-encrypted backup.
+- Add required platform folders and move Android source to android/app while
+  preserving the Gradle :app module and one unified Software workflow.
+- Add default-on daily background update checks, persisted last-check details,
+  and an immediate Settings toggle; retain startup/manual checks and optional beta.
+- Automatically classify major/minor/patch from unreleased Conventional Commits;
+  beta retries now receive higher Android version codes.
+- Make release publishing safe to retry without changing an existing tag or APK.
+- Delegate legacy local release requests to the same automatic GitHub workflow.
+- Record the adopted GitHub documents in docs/instructions; PR title uses cgpt-.
+
 # Kalam — Android BACKLOG
 
 Package `com.krishna.kalam` · Kotlin/Compose · minSdk 26 · targetSdk 34 · JDK21 · Gradle 8.7
@@ -888,3 +906,21 @@ Repo krishnabhunia/kalam-calendar exists (public, push OK from Krishna's side) b
   Android restore depends on device backup settings and stable signing identity.
 - Allocate a minor semantic version for this feature. Device reinstall checks
   are still pending; no claim of unconditional automatic restore is made.
+# 1.24.0 beta — Android updates and permanent signing (10 October 2026)
+
+- Confirm different signing certificates in the published 1.22.0 and 1.23.0 APKs.
+- Require one protected signing key and pinned certificate for installable
+  workflow artifacts; refuse publication when signing is not configured.
+- Add a collapsible App updates section in Settings with installed version,
+  manual GitHub check, persisted optional beta switch, verified download and
+  Android installer. Check once on app startup.
+- Validate semantic version/channel, ZIP digest/size, exact APK payload,
+  package, versionCode/versionName and installed certificate before installation.
+- Keep PR build tokens read-only, publish stable releases after merge, and allow
+  maintainers to explicitly publish optional beta releases with workflow dispatch.
+- Produce one directly downloadable ZIP and tag source with delivered metadata.
+- Resolve release lint failure caused by the old Fragment dependency from Play Services.
+- Local verification: 137 Android tests, 7 Python tests, release APK build/lint,
+  correct package/version/non-debuggable manifest and two identical signing runs
+  with a local test key. Permanent production signing setup and real-device
+  install/update/data-retention checks remain pending.

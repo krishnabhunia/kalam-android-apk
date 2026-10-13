@@ -24,12 +24,16 @@ gradle :app:assembleDebug
 
 ## Releases
 
-The single Software workflow tests PRs and produces semantic-version beta APKs.
-After merge to main, it publishes the next stable bugfix version on GitHub.
+The single Software workflow tests PRs and produces unsigned semantic-version beta validation APKs.
+Protected main/manual builds produce installable APKs with the permanent key.
+After merge to main, it publishes the allocated stable version on GitHub.
 The single artifact is `Kalam_<version>.zip`; one extraction reveals
 `Android/Kalam_<version>.apk`. Windows and macOS are absent and are skipped.
-APKs currently use the debug signing key; stable signing and self-update remain
-queued under K83 and are not implemented by this calendar correction.
+Installable workflow APKs require the permanent signing key in the protected android-signing GitHub
+Actions environment. Missing signing configuration blocks publication rather than
+generating a different debug key. Settings includes daily background and startup GitHub update checks,
+optional beta releases, verified download and Android's installation prompt.
+See [Android updates and signing setup](docs/android-updates.md).
 
 ## Privacy
 
@@ -42,3 +46,17 @@ Birth-detail defaults are blank in a fresh install.
 Every release passes: unit suite · version gate · `aapt` badging on the *delivered* APK ·
 zip-content greps · md5-distinct-from-previous. External data (Bengali calendar, tithi,
 weather payloads) is wire-verified at build and baked in as test vectors.
+
+## Repository layout
+
+- `android/app`: Android source, mapped to the Gradle `:app` module.
+- `docs`: designs and documentation.
+- `windows` and `macOS`: reserved; no desktop source is implemented, so these platforms are skipped.
+- `common`: shared layout notes; common build scripts remain in `tools`.
+
+PRs use the `cgpt-` title prefix. GitHub selects major/minor/patch automatically
+from unreleased Conventional Commits (`feat:` is minor, breaking changes major,
+ordinary fixes patch); PR and manual builds are beta versions. The single
+Software workflow builds, signs, verifies and uploads one `Kalam_<version>.zip`.
+Stable release publication happens after merging to main. `release.sh` delegates
+to this same workflow and accepts no manually assigned version.
