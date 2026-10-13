@@ -60,5 +60,38 @@ class WorkflowKeyIsolationTest(unittest.TestCase):
         self.assertNotIn('cancel-in-progress: true', self.text)
 
 
+def upload_steps(text):
+    """The `with:` lines of every actions/upload-artifact step."""
+    steps = []
+    for chunk in text.split('uses: actions/upload-artifact@')[1:]:
+        lines = []
+        for line in chunk.splitlines()[1:]:
+            if line.strip().startswith('- ') or re.fullmatch(r'  [A-Za-z0-9_-]+:\s*', line):
+                break
+            lines.append(line.strip())
+        steps.append(dict(line.split(': ', 1) for line in lines if ': ' in line))
+    return steps
+
+
+class SingleArtifactTest(unittest.TestCase):
+    """A release run must keep exactly one Kalam_<version>.zip artifact."""
+
+    def setUp(self):
+        self.text = WORKFLOW.read_text()
+
+    def test_name_matches_the_file_so_overwrite_can_find_it(self):
+        # archive: false names the artifact after the file, but overwrite deletes by `name`.
+        for step in upload_steps(self.text):
+            if step.get('archive') == 'false':
+                self.assertEqual(step['path'].rsplit('/', 1)[-1], step.get('name'), step)
+
+    def test_signed_zip_replaces_the_validation_zip_and_is_proven_single(self):
+        self.assertIn('true', [step.get('overwrite') for step in upload_steps(self.text)])
+        sign = jobs(self.text)['signed-release']
+        self.assertIn('Prove the run keeps exactly one artifact', sign)
+        self.assertLess(sign.index('Prove the run keeps exactly one artifact'),
+                        sign.index('Record signed build and optionally publish release'))
+
+
 if __name__ == '__main__':
     unittest.main()
