@@ -1,3 +1,11 @@
+## 13 October 2026 — one final workflow artifact
+
+- Set the explicit ZIP name on both uploads so the signed ZIP replaces the
+  unsigned validation artifact when archive creation is disabled.
+- Verify artifact count, upload ID, filename and SHA-256 after each upload;
+  block publication if the run retains anything other than the expected ZIP.
+- Add regression coverage for duplicate artifacts and mismatched uploads.
+
 ## 13 October 2026 — correct PR build and instruction compliance
 
 - Keep signing keys in a branch-restricted environment, outside PR jobs.

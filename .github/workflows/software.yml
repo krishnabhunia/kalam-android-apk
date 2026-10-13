@@ -12,6 +12,7 @@ on:
         default: false
 permissions:
   contents: read
+  actions: read
 concurrency:
   group: ${{ github.event_name == 'pull_request' && format('software-pr-{0}', github.event.pull_request.number) || 'software-android-releases' }}
   cancel-in-progress: false
@@ -61,13 +62,22 @@ jobs:
           python tools/check_apk.py "package/Android/Kalam_${VERSION}.apk" "$CODE" "$VERSION"
           (cd package && zip -r "../Kalam_${VERSION}.zip" Android)
       - name: Upload exactly one directly downloadable ZIP
+        id: validation-upload
         if: steps.version.outputs.skip != 'true'
         uses: actions/upload-artifact@v7
         with:
           name: Kalam_${{ steps.version.outputs.version }}.zip
           path: Kalam_${{ steps.version.outputs.version }}.zip
+          overwrite: true
           if-no-files-found: error
           archive: false
+      - name: Verify the single validation artifact
+        if: steps.version.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ARTIFACT_ID: ${{ steps.validation-upload.outputs.artifact-id }}
+          ZIP_PATH: Kalam_${{ steps.version.outputs.version }}.zip
+        run: python tools/check_artifacts.py
   signed-release:
     needs: android
     if: needs.android.outputs.skip != 'true' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
@@ -128,16 +138,20 @@ jobs:
               archive.write(f'signed/Android/Kalam_{version}.apk', f'Android/Kalam_{version}.apk')
           PY
       - name: Keep exactly one signed downloadable ZIP
+        id: signed-upload
         uses: actions/upload-artifact@v7
         with:
+
           # With archive: false the artifact is named after the file, but overwrite deletes
           # by this name input (default "artifact"). Without it the unsigned validation
           # ZIP from the android job survived next to the signed one (runs 15 and 17).
+
           name: Kalam_${{ needs.android.outputs.version }}.zip
           path: release/Kalam_${{ needs.android.outputs.version }}.zip
           overwrite: true
           if-no-files-found: error
           archive: false
+
       - name: Prove the run keeps exactly one artifact
         env:
           GH_TOKEN: ${{ github.token }}
@@ -149,6 +163,7 @@ jobs:
           if [ "$(echo "$artifacts" | wc -l)" != 1 ] || [ "${artifacts%% *}" != "$EXPECTED" ]; then
             echo "::error::Expected exactly one artifact $EXPECTED"; exit 1
           fi
+          
       - name: Record signed build and optionally publish release
         env:
           GH_TOKEN: ${{ github.token }}
