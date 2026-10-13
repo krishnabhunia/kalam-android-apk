@@ -141,29 +141,17 @@ jobs:
         id: signed-upload
         uses: actions/upload-artifact@v7
         with:
-
-          # With archive: false the artifact is named after the file, but overwrite deletes
-          # by this name input (default "artifact"). Without it the unsigned validation
-          # ZIP from the android job survived next to the signed one (runs 15 and 17).
-
           name: Kalam_${{ needs.android.outputs.version }}.zip
           path: release/Kalam_${{ needs.android.outputs.version }}.zip
           overwrite: true
           if-no-files-found: error
           archive: false
-
-      - name: Prove the run keeps exactly one artifact
+      - name: Verify only the signed ZIP remains before publication
         env:
           GH_TOKEN: ${{ github.token }}
-          EXPECTED: Kalam_${{ needs.android.outputs.version }}.zip
-        shell: bash
-        run: |
-          artifacts=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/artifacts" --jq '.artifacts[] | .name + " " + .digest')
-          echo "$artifacts"
-          if [ "$(echo "$artifacts" | wc -l)" != 1 ] || [ "${artifacts%% *}" != "$EXPECTED" ]; then
-            echo "::error::Expected exactly one artifact $EXPECTED"; exit 1
-          fi
-          
+          ARTIFACT_ID: ${{ steps.signed-upload.outputs.artifact-id }}
+          ZIP_PATH: release/Kalam_${{ needs.android.outputs.version }}.zip
+        run: python tools/check_artifacts.py
       - name: Record signed build and optionally publish release
         env:
           GH_TOKEN: ${{ github.token }}

@@ -953,13 +953,3 @@ Follows 1.24.0. Version is allocated by CI from the commit types (fix → patch)
 | 13 | Docs | 1.22/1.23 migration runbook (do **not** keep app data), required reviewer on `android-signing`, clipboard-history warning. |
 
 Local verification: Android unit tests and Python tool tests (see PR). Not verified on a device: everything in DEVICE-CHECKLIST "Audit fixes".
-
-# CI fix — one ZIP artifact per release run (13 October 2026)
-
-- Release runs 15 (1.24.0) and 17 (1.24.1) kept two `Kalam_<version>.zip` artifacts: the
-  unsigned validation ZIP from the `android` job and the signed ZIP. With `archive: false`
-  the artifact is named after the file, but `overwrite: true` deletes by the `name` input
-  (default `artifact`), so the validation ZIP was never replaced.
-- Both uploads now set `name` to the file name, and the signing job fails before publishing
-  unless the run holds exactly one artifact. Tests pin both. The published release files
-  were always the signed ZIPs (digests match); the stray unsigned ZIPs were deleted.
