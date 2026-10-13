@@ -356,3 +356,21 @@ Persistence quartet applies where marked ⟳: act → verify → kill+reopen →
 - Verify permission handoff for installing unknown apps and the system install
   confirmation. Cancel permission/install; Kalam and its data must remain intact.
 - Confirm a different-key APK is blocked before opening the installer.
+
+# Audit fixes — pending real-device checks (13 October 2026)
+
+| SrNo. | Check | Steps | Pass condition |
+| --- | --- | --- | --- |
+| D-A-1 | Fresh-install DOB/TOB | Fresh install → Settings → Match → My details → tap DOB, then TOB | Pickers open at 01-Jan-1990 / 12:00; no crash |
+| D-A-2 | Delete active+default place | Save a GPS place, make it Default and active, delete it | Header shows the fallback city; Error logs show "deleted place was active/default"; today's bells still fire |
+| D-A-3 | Next-day re-arm | Enable a kalam start alert, swipe Kalam from Recents (do not force-stop), wait past midnight | Next day's alert fires without opening Kalam; Error logs show "rearm requested by REARM_NEXT_DAY" |
+| D-A-4 | Re-arm after update | Install a newer same-key APK, do not open Kalam | Error logs show "rearm requested by MY_PACKAGE_REPLACED"; today's alerts fire |
+| D-A-5 | STOP clears snoozed card | Let a sky alarm fire, Snooze 5 min, let it fire again, tap STOP in the notification | No ongoing Kalam alarm card remains |
+| D-A-6 | Power key stops alarm | Let a sky alarm fire on the lock screen, press power | Sound and vibration stop |
+| D-A-7 | Android 8.0 lock screen | On an API 26 phone, let a sky alarm fire while locked | Alarm screen shows over the lock screen and wakes the display |
+| D-A-8 | Screen sleeps after cap | Let an alarm ring unattended for 60 s | Sound stops; screen may then time out normally; the alarm card stays in the shade |
+| D-A-9 | Bengali digits | Phone language Bengali → Match → set girl TOB → Match | Request succeeds (no HTTP 400) |
+| D-A-10 | Background logging | Let an alert fire with Kalam closed, then open Error logs | The background entries are listed |
+| D-A-11 | Download kept | Settings → App updates → Download → tap Check GitHub for updates again | "Install" is still offered for the verified version |
+| D-A-12 | Android 9 updater | On an API 28 phone with a permanently signed Kalam, download a newer same-key release | Install opens Android's installer (no "different signing key" error) |
+| D-A-13 | UNDO restores default | Make a saved place the Default, delete it, tap UNDO | The place is back and is the Default again |
