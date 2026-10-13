@@ -24,12 +24,13 @@ gradle :app:assembleDebug
 
 ## Releases
 
-The single Software workflow tests PRs and produces semantic-version beta APKs.
+The single Software workflow tests PRs and produces unsigned semantic-version beta validation APKs.
+Protected main/manual builds produce installable APKs with the permanent key.
 After merge to main, it publishes the allocated stable version on GitHub.
 The single artifact is `Kalam_<version>.zip`; one extraction reveals
 `Android/Kalam_<version>.apk`. Windows and macOS are absent and are skipped.
-Installable workflow APKs require the permanent signing key in protected GitHub
-Actions secrets. Missing signing configuration blocks publication rather than
+Installable workflow APKs require the permanent signing key in the protected android-signing GitHub
+Actions environment. Missing signing configuration blocks publication rather than
 generating a different debug key. Settings includes daily background and startup GitHub update checks,
 optional beta releases, verified download and Android's installation prompt.
 See [Android updates and signing setup](docs/android-updates.md).

@@ -6,9 +6,9 @@ from G:/My Drive/Github Skills. Platform source lives in android/app, with docs,
 windows, macOS and common present. Desktop source is absent and skipped. PR titles
 use cgpt-. The one Software workflow automatically allocates SemVer from unreleased
 commits, creates beta PR builds, and publishes stable builds after merge. Android
-checks at startup and optionally each day; beta updates remain optional. All
-installable artifacts use the protected permanent signing key, never a fresh
-runner debug key. The legacy notes below are historical where these user
+checks at startup and optionally each day; beta updates remain optional. PR validation APKs are unsigned and receive no signing secrets. All
+installable main/manual artifacts use the protected android-signing environment
+and permanent key, never a fresh runner debug key. The legacy notes below are historical where these user
 instructions or the current implementation supersede them.
 
 ## 9 October 2026 user override

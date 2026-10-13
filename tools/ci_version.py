@@ -49,12 +49,37 @@ def allocate_version(base, bump):
     return f'{major}.{minor}.{patch}'
 
 
-def android_code(run, attempt):
+def highest_tagged_code(tags):
+    """Published beta/stable tags record the versionCode of the delivered APK."""
+    highest = 0
+    for tag in tags:
+        if not re.fullmatch(r'v?(0|[1-9]\d*)\.(0|[1-9]\d*)(?:\.(0|[1-9]\d*))?(?:-beta\.[0-9A-Za-z.-]+)?', tag):
+            continue
+        for module in ('android/app', 'app'):
+            try:
+                text = subprocess.check_output(['git', 'show', f'{tag}:{module}/build.gradle'],
+                                               text=True, encoding='utf-8', stderr=subprocess.DEVNULL)
+            except subprocess.CalledProcessError:
+                # Early tags predate this Android source/layout.
+                continue
+            match = re.search(r'\bversionCode\s+(\d+)', text)
+            if match:
+                code = int(match.group(1))
+                if not 1 <= code <= MAX_VERSION_CODE:
+                    raise ValueError(f'Invalid Android versionCode recorded in {tag}')
+                highest = max(highest, code)
+                break
+    return highest
+
+
+def android_code(run, attempt, previous=0):
     # A retry is a newer beta too. Leave 99 attempts per run and stay above all
     # old runner-generated APKs (the latest legacy versionCode was 33).
     if run < 1 or not 1 <= attempt <= 99:
         raise ValueError('GitHub run number must be positive and run attempt must be 1..99')
-    code = 1000 + 100 * run + attempt
+    # Publishing workflows are serialized and fetch tags before allocation.
+    # A queued older run must still update a newer beta that published first.
+    code = max(1000 + 100 * run + attempt, previous + 1)
     if code > MAX_VERSION_CODE:
         raise ValueError('Allocated Android versionCode exceeds the supported limit')
     return code
@@ -74,9 +99,25 @@ def replace_once(text, pattern, replacement, label):
     return result
 
 
+def head_is_already_released(tag):
+    result = subprocess.run(['git', 'merge-base', '--is-ancestor', 'HEAD', tag],
+                            capture_output=True, text=True, encoding='utf-8')
+    if result.returncode not in (0, 1):
+        raise ValueError(f'Could not compare the main source with released tag {tag}')
+    return result.returncode == 0
+
+
 def main():
     tags = subprocess.check_output(['git', 'tag'], text=True, encoding='utf-8').splitlines()
     base, tag = latest_stable(tags)
+    event_name = os.environ['GITHUB_EVENT_NAME']
+    if event_name == 'push' and tag and head_is_already_released(tag):
+        # GitHub's concurrency queue has no ordering guarantee. Do not package
+        # an older main source as a new release after a newer push publishes.
+        with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as output:
+            output.write('skip=true\n')
+        print(f'Skipping release: this main source was already delivered by {tag}.')
+        return
     bump = os.environ.get('VERSION_BUMP', '').strip().lower()
     if not bump:
         # This also excludes the released source when its tag points to a
@@ -87,8 +128,7 @@ def main():
         bump = infer_bump(messages)
     version = allocate_version(base, bump)
     run, attempt = int(os.environ['GITHUB_RUN_NUMBER']), int(os.environ['GITHUB_RUN_ATTEMPT'])
-    code = android_code(run, attempt)
-    event_name = os.environ['GITHUB_EVENT_NAME']
+    code = android_code(run, attempt, highest_tagged_code(tags))
     if event_name == 'pull_request':
         event = json.loads(pathlib.Path(os.environ['GITHUB_EVENT_PATH']).read_text(encoding='utf-8'))
         version += f'-beta.{int(event["number"])}.{run}.{attempt}'
@@ -111,7 +151,7 @@ def main():
     gradle.write_text(gradle_text, encoding='utf-8')
     badge.write_text(badge_text, encoding='utf-8')
     with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as output:
-        output.write(f'version={version}\ncode={code}\ndate={today}\nbump={bump}\n')
+        output.write(f'version={version}\ncode={code}\ndate={today}\nbump={bump}\nskip=false\n')
     print(f'Kalam {version}, Android code {code} ({bump} update)')
 
 

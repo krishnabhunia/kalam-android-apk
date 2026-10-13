@@ -64,8 +64,7 @@ object GitHubUpdates {
             val apk = withContext(Dispatchers.IO) {
                 val dir = File(ctx.cacheDir, "updates").apply { mkdirs() }
                 val zip = File(dir, "download.zip")
-                val output = File(dir, "Kalam_${release.version}.apk")
-                output.delete()
+                val staged = File.createTempFile("kalam-download-", ".apk", dir)
                 try {
                     request(release.zipUrl) { input ->
                         zip.outputStream().use { out ->
@@ -80,11 +79,9 @@ object GitHubUpdates {
                             require(total == release.size && hex(digest.digest()) == release.digest) { "Update checksum did not match; try again" }
                         }
                     }
-                    extract(zip, output, "Android/Kalam_${release.version}.apk")
-                    verify(ctx, output, release.version)
-                    output
-                } catch (e: Exception) { output.delete(); throw e }
-                finally { zip.delete() }
+                    extract(zip, staged, "Android/Kalam_${release.version}.apk")
+                    UpdateCache.publish(dir, staged, release.version) { verify(ctx, it, release.version) }
+                } finally { zip.delete(); staged.delete() }
             }
             mutable.value = UpdateStatus(message = "Verified ${release.version}. Ready to install.", release = release, apk = apk)
             Logger.e("Updates", "download and installed-signature verification passed ${release.version}")

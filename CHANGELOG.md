@@ -1,5 +1,9 @@
 ## 13 October 2026 — correct PR build and instruction compliance
 
+- Keep signing keys in a branch-restricted environment, outside PR jobs.
+  PR validation APKs are unsigned; reviewed manual/main builds are signed.
+- Serialize signed workflows and allocate codes above all signed tags.
+- Clean superseded owned APK cache files only after verified atomic replacement.
 - Configure and verify one protected permanent Android signing key; no private
   key or password is committed. Retain a local Windows-encrypted backup.
 - Add required platform folders and move Android source to android/app while

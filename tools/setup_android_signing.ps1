@@ -54,7 +54,7 @@ if ($Mode -eq 'CopySecret') {
         'ANDROID_KEY_PASSWORD' { Plain $config.KeyPassword }
     }
     Set-Clipboard -Value $value
-    Write-Host "$SecretName copied. Paste it into the matching GitHub repository Actions secret."
+    Write-Host "$SecretName copied. Paste it into the matching GitHub android-signing environment secret."
     exit
 }
 try {

@@ -39,7 +39,16 @@ def configure(repository, login, values):
 
     if request('user')['login'].lower() != login.lower():
         raise ValueError('Authenticated GitHub account differs from the selected account')
-    prefix = f'repos/{repository}/actions/'
+    repo_prefix = f'repos/{repository}/actions/'
+    environment = f'repos/{repository}/environments/android-signing'
+    # A PR uses refs/pull/N/merge, which cannot match these signing branch rules.
+    request(environment, 'PUT', {'deployment_branch_policy': {
+        'protected_branches': False, 'custom_branch_policies': True}})
+    rules = request(environment + '/deployment-branch-policies')['branch_policies']
+    for name in ('main', 'codex/*'):
+        if not any(rule['name'] == name and rule['type'] == 'branch' for rule in rules):
+            request(environment + '/deployment-branch-policies', 'POST', {'name': name, 'type': 'branch'})
+    prefix = environment + '/'
     expected_names = {'ANDROID_KEYSTORE_BASE64', 'ANDROID_KEYSTORE_PASSWORD', 'ANDROID_KEY_ALIAS', 'ANDROID_KEY_PASSWORD'}
     if set(values) != expected_names | {'ANDROID_SIGNING_CERT_SHA256'} or any(not values[n] for n in expected_names):
         raise ValueError('Signing values are incomplete')
@@ -49,17 +58,32 @@ def configure(repository, login, values):
     existing = request(prefix + 'secrets')['secrets']
     # Refuse to replace a signing identity that may already have been deployed.
     if any(secret['name'] in expected_names for secret in existing):
-        raise ValueError('Signing secrets already exist; preserve them rather than overwrite the key')
+        raise ValueError('Protected environment signing secrets already exist; preserve the key')
     key = request(prefix + 'secrets/public-key')
     box = SealedBox(PublicKey(base64.b64decode(key['key'])))
     for name in sorted(expected_names):
         encrypted = base64.b64encode(box.encrypt(values[name].encode())).decode()
         request(prefix + 'secrets/' + name, 'PUT', {'encrypted_value': encrypted, 'key_id': key['key_id']})
         print('Configured protected Actions secret: ' + name)
-    request(prefix + 'variables', 'POST', {'name': 'ANDROID_SIGNING_CERT_SHA256', 'value': certificate})
+    try:
+        prior = request(repo_prefix + 'variables/ANDROID_SIGNING_CERT_SHA256')
+    except urllib.error.HTTPError as error:
+        if error.code != 404:
+            raise
+        prior = None
+    if prior is not None and prior['value'] != certificate:
+        raise ValueError('Existing certificate fingerprint differs; do not replace the signing key')
+    if prior is None:
+        request(repo_prefix + 'variables', 'POST', {'name': 'ANDROID_SIGNING_CERT_SHA256', 'value': certificate})
     actual = {item['name'] for item in request(prefix + 'secrets')['secrets']}
-    if not expected_names.issubset(actual) or request(prefix + 'variables/ANDROID_SIGNING_CERT_SHA256')['value'] != certificate:
+    if not expected_names.issubset(actual) or request(repo_prefix + 'variables/ANDROID_SIGNING_CERT_SHA256')['value'] != certificate:
         raise ValueError('GitHub signing settings could not be confirmed')
+    # Remove broad repository exposure only after the same protected key is confirmed.
+    broad = {item['name'] for item in request(repo_prefix + 'secrets')['secrets']}
+    for name in sorted(expected_names & broad):
+        request(repo_prefix + 'secrets/' + name, 'DELETE')
+    if expected_names & {item['name'] for item in request(repo_prefix + 'secrets')['secrets']}:
+        raise ValueError('Signing secrets still have repository-wide exposure')
     print('Verified signing configuration for ' + repository + ' under ' + login)
     print('Public signing certificate SHA-256: ' + certificate)
 

@@ -11,7 +11,7 @@ def run(*args):
     return subprocess.check_output(args, text=True).strip()
 
 
-def publish(version, code, date, target, repository, archive, beta=False):
+def publish(version, code, date, target, repository, archive, beta=False, publish_release=True):
     if not re.fullmatch(r'\d+\.\d+\.\d+(?:-beta\.[0-9A-Za-z.]+)?', version) or not str(code).isdigit():
         raise ValueError('Invalid delivered version metadata')
     if not re.fullmatch(r'[0-9a-f]{40}', target) or not re.fullmatch(r'[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+', repository):
@@ -44,6 +44,9 @@ def publish(version, code, date, target, repository, archive, beta=False):
         run('git', 'commit', '--allow-empty', '-m', f'Record delivered Kalam {version} metadata')
         run('git', 'tag', tag)
         run('git', 'push', 'origin', 'refs/tags/' + tag)
+    if not publish_release:
+        print('Recorded signed beta build ' + tag + ' without publishing a GitHub release')
+        return
     view = subprocess.run(['gh', 'api', f'repos/{repository}/releases/tags/{tag}'], capture_output=True, text=True)
     if view.returncode == 0:
         release = json.loads(view.stdout)
@@ -70,4 +73,5 @@ def publish(version, code, date, target, repository, archive, beta=False):
 if __name__ == '__main__':
     version = os.environ['VERSION']
     publish(version, os.environ['CODE'], os.environ['RELEASE_DATE'], os.environ['TARGET'], os.environ['GH_REPO'],
-            pathlib.Path('release') / f'Kalam_{version}.zip', os.environ.get('BETA') == 'true')
+            pathlib.Path('release') / f'Kalam_{version}.zip', os.environ.get('BETA') == 'true',
+            os.environ.get('PUBLISH_RELEASE', 'true') == 'true')

@@ -16,33 +16,48 @@ SCRIPT = pathlib.Path(__file__).with_name('ci_version.py')
 
 class VersionTest(unittest.TestCase):
     def check_version(self, event, tags, expected, bump='', messages='fix: resolve installer conflict\0',
-                      run=10, attempt=2, module='app', real_git=False):
+                      run=10, attempt=2, module='app', real_git=False, tag_metadata=None, expected_code=None,
+                      expect_skip=False):
         root = pathlib.Path.cwd() if real_git else None
         with contextlib.ExitStack() as stack:
             if root is None:
                 root = pathlib.Path(stack.enter_context(tempfile.TemporaryDirectory()))
             gradle = root / module / 'build.gradle'
             badge = root / module / 'src/main/java/com/krishna/kalam/AppVersion.kt'
-            badge.parent.mkdir(parents=True)
+            badge.parent.mkdir(parents=True, exist_ok=True)
             gradle.write_text('versionCode 34; versionName "1.24.0-beta.1"\n// Bengali বাংলা', encoding='utf-8')
             badge.write_text('const val NAME = "1.24.0-beta.1"\nconst val RELEASE_DATE = "09-Oct-2026"\n// বাংলা', encoding='utf-8')
             (root / 'event.json').write_text(json.dumps({'number': 7}), encoding='utf-8')
+            (root / 'output').write_text('', encoding='utf-8')
             env = dict(VERSION_BUMP=bump, GITHUB_EVENT_NAME=event, GITHUB_EVENT_PATH=str(root / 'event.json'),
                        GITHUB_RUN_NUMBER=str(run), GITHUB_RUN_ATTEMPT=str(attempt), GITHUB_OUTPUT=str(root / 'output'))
             stack.enter_context(contextlib.chdir(root))
             stack.enter_context(patch.dict(os.environ, env))
             if not real_git:
+                stack.enter_context(patch('subprocess.run', return_value=subprocess.CompletedProcess([], 1)))
                 def git_output(command, **kwargs):
                     self.assertEqual('utf-8', kwargs['encoding'])
-                    return tags if command == ['git', 'tag'] else messages
+                    if command == ['git', 'tag']:
+                        return tags
+                    if command[:2] == ['git', 'log']:
+                        return messages
+                    if command[:2] == ['git', 'show'] and command[2] in (tag_metadata or {}):
+                        return tag_metadata[command[2]]
+                    raise subprocess.CalledProcessError(128, command)
                 mocked_git = stack.enter_context(patch('subprocess.check_output', side_effect=git_output))
             runpy.run_path(str(SCRIPT), run_name='__main__')
-            code = 1000 + 100 * run + attempt
+            if expect_skip:
+                self.assertEqual('skip=true\n', (root / 'output').read_text(encoding='utf-8'))
+                self.assertIn('versionCode 34; versionName "1.24.0-beta.1"', gradle.read_text(encoding='utf-8'))
+                self.assertIn('NAME = "1.24.0-beta.1"', badge.read_text(encoding='utf-8'))
+                return []
+            code = expected_code if expected_code is not None else 1000 + 100 * run + attempt
             self.assertIn(f'versionName "{expected}"', gradle.read_text(encoding='utf-8'))
             self.assertIn(f'versionCode {code};', gradle.read_text(encoding='utf-8'))
             self.assertIn(f'NAME = "{expected}"', badge.read_text(encoding='utf-8'))
             self.assertIn('বাংলা', badge.read_text(encoding='utf-8'))
             self.assertTrue((root / 'output').read_text(encoding='utf-8').startswith(f'version={expected}\ncode={code}\ndate='))
+            self.assertIn('skip=false\n', (root / 'output').read_text(encoding='utf-8'))
             return mocked_git.call_args_list if not real_git else []
 
     def test_first_beta_uses_three_part_base(self):
@@ -94,6 +109,19 @@ class VersionTest(unittest.TestCase):
             with self.subTest(run=run, attempt=attempt), self.assertRaises(ValueError):
                 ci_version.android_code(run, attempt)
 
+    def test_older_run_publishing_after_newer_beta_increases_tagged_code(self):
+        metadata = {
+            'v1.23.0:app/build.gradle': 'versionCode 33; versionName "1.23.0"',
+            'v1.24.0-beta.manual.40.1:android/app/build.gradle':
+                'versionCode 5001; versionName "1.24.0-beta.manual.40.1"',
+        }
+        self.check_version('push', 'v1.23.0\nv1.24.0-beta.manual.40.1\n', '1.24.0',
+                           messages='feat(updates): add daily checks\0', run=10, attempt=2,
+                           tag_metadata=metadata, expected_code=5002)
+        self.assertEqual(5002, ci_version.android_code(10, 2, previous=5001))
+        with self.assertRaisesRegex(ValueError, 'supported limit'):
+            ci_version.android_code(10, 2, previous=ci_version.MAX_VERSION_CODE)
+
     def test_metadata_tag_child_excludes_its_released_source_commits(self):
         # Publish historically tags a metadata-only child of main. A later main
         # commit is a sibling: tag..HEAD must not count the released feat again.
@@ -112,6 +140,7 @@ class VersionTest(unittest.TestCase):
             git('commit', '-m', 'Record delivered Kalam 1.23.0 metadata')
             git('tag', 'v1.23.0')
             git('checkout', '--detach', source_commit)
+            self.check_version('push', '', '', real_git=True, expect_skip=True)
             pathlib.Path('source.txt').write_text('fixed feature', encoding='utf-8')
             git('commit', '-am', 'fix: correct existing behavior')
             self.check_version('push', '', '1.23.1', real_git=True)

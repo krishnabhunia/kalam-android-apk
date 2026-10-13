@@ -24,7 +24,7 @@ Its public certificate SHA-256 is
 The private key and Windows-encrypted credential backup are stored outside the
 repository in `%LOCALAPPDATA%/KalamSigning`; do not regenerate them.
 
-For another installation, configure these GitHub repository Actions secrets before building installable
+For another installation, configure these GitHub android-signing environment Actions secrets before building installable
 artifacts with the new workflow:
 
 - `ANDROID_KEYSTORE_BASE64`: base64 of the permanent keystore's binary contents.
@@ -52,7 +52,13 @@ Default Fingerprint mode displays the public fingerprint for the variable.
 Keep a secure offline copy of the keystore and the actual passwords: Windows
 encrypted credentials alone cannot be recovered by another Windows account.
 
-The signing step uses that protected key for every beta and stable APK. It
+The protected signing job uses that key for installable beta and stable APKs.
+Its environment permits main and explicitly selected codex/* branch builds;
+refs/pull/*/merge cannot access the signing secrets. Signing secrets have been
+removed from repository-wide scope. PR checks produce unsigned beta validation
+APKs and never receive the key. After review, a manual branch build or a main
+build creates the installable signed APK and replaces the validation ZIP,
+leaving exactly one download. It
 verifies the fingerprint and refuses to publish if configuration is missing or
 incorrect. It never falls back to a new debug key. PR tests/builds use a read-only
 GitHub token; a separate publishing job has release write permission.
@@ -74,13 +80,15 @@ setting schedules a persistent 24-hour WorkManager check with an internet
 constraint. Android may delay background work to save battery. Last-check
 results and time survive process restarts. It reads published GitHub Releases,
 compares semantic versions numerically, and ignores drafts, older versions,
-foreign assets and releases without a usable SHA-256 checksum. PR artifacts
-are not public GitHub releases and do not appear in this feed automatically.
+foreign assets and releases without a usable SHA-256 checksum. Unsigned PR validation artifacts
+are not installable app updates or public GitHub releases and do not appear in this feed automatically.
 
 To publish an optional beta, a maintainer can explicitly run the Software
 workflow on the desired branch with **publish_beta** enabled. It publishes a
 GitHub prerelease without changing the stable latest release. Ordinary PR runs
-only produce the beta artifact. Stable releases publish after merging to main.
+only produce an unsigned beta validation artifact. Explicitly running the
+Software workflow on an allowed reviewed branch creates a signed beta ZIP;
+publish_beta additionally publishes that beta to GitHub Releases. Stable releases publish after merging to main.
 
 Download fetches the single versioned ZIP, checks GitHub's SHA-256 and size,
 extracts only the expected Android APK into private cache, and verifies its
@@ -101,3 +109,10 @@ installation prompt, install-over-update and preservation of all app data.
 References: [Android app signing](https://developer.android.com/studio/publish/app-signing),
 [Android update requirements](https://developer.android.com/google/play/app-updates),
 [GitHub Releases API](https://docs.github.com/en/rest/releases/releases).
+
+Release-producing workflows share one queued concurrency group. The allocation
+step fetches current tags and chooses an Android code above every signed tag,
+so late-starting older runs cannot publish lower codes. Signed artifact-only
+beta builds also record their tag metadata. Superseded APKs are removed from
+private update cache only after a new APK has been verified and atomically stored;
+failed downloads retain the previously verified file.
