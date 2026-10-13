@@ -76,11 +76,21 @@ object ReleasePolicy {
         return releases.filter { (includeBeta || !it.beta) && it.parsed > current }.maxByOrNull { it.parsed }
     }
     fun validateApk(packageName: String, expectedPackage: String, code: Long, installedCode: Long,
-                    version: String?, expectedVersion: String, certificates: Set<String>, installedCertificates: Set<String>) {
+                    version: String?, expectedVersion: String, certificates: Set<String>, installedCertificates: Set<String>,
+                    archiveLineage: Set<String> = certificates) {
         require(packageName == expectedPackage) { "This APK belongs to a different app" }
         require(version == expectedVersion && code > installedCode) { "This APK is not a newer installable version" }
-        require(certificates.isNotEmpty() && certificates == installedCertificates) {
+        require(signingAccepted(certificates, archiveLineage, installedCertificates)) {
             "This update uses a different signing key. Your installed app cannot accept it. Keep your clocks backed up; this updater will not uninstall Kalam."
         }
     }
+
+    /**
+     * Android's own update rule: the same signer set, or — for one signer — a rotated key
+     * (APK Signature Scheme v3) whose proof-of-rotation lineage contains the installed
+     * certificate. Plain equality would block the only safe way to replace a compromised key.
+     */
+    fun signingAccepted(signers: Set<String>, lineage: Set<String>, installed: Set<String>): Boolean =
+        signers.isNotEmpty() && installed.isNotEmpty() && (signers == installed ||
+            (signers.size == 1 && installed.size == 1 && installed.single() in lineage))
 }

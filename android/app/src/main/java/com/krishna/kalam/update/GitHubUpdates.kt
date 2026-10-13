@@ -29,6 +29,7 @@ object GitHubUpdates {
     private val lock = Mutex()
 
     suspend fun check(includeBeta: Boolean): Boolean = lock.withLock {
+        val previous = mutable.value
         mutable.value = UpdateStatus(busy = true, message = "Checking GitHub…")
         try {
             val releases = withContext(Dispatchers.IO) {
@@ -46,14 +47,21 @@ object GitHubUpdates {
                 found
             }
             val release = ReleasePolicy.newer(releases, AppVersion.NAME, includeBeta)
-            mutable.value = UpdateStatus(message = if (release != null) "Version ${release.version} is available"
-                else "No newer ${if (includeBeta) "stable or beta" else "stable"} version is available", release = release)
+            // A re-check (startup after the activity is recreated, or Check again) must not drop an
+            // already verified download of the same version — its Install button would vanish.
+            val ready = previous.apk?.takeIf { release != null && previous.release?.version == release.version && it.exists() }
+            mutable.value = UpdateStatus(message = when {
+                ready != null -> "Verified ${release!!.version}. Ready to install."
+                release != null -> "Version ${release.version} is available"
+                else -> "No newer ${if (includeBeta) "stable or beta" else "stable"} version is available"
+            }, release = release, apk = ready)
             Logger.e("Updates", "GitHub check completed; update=${release?.version ?: "none"}")
             true
         } catch (e: Exception) {
-            if (e is CancellationException) { mutable.value = UpdateStatus(); throw e }
+            if (e is CancellationException) { mutable.value = previous; throw e }
             Logger.e("Updates", "GitHub check failed", e)
-            mutable.value = UpdateStatus(message = "Could not check GitHub. ${e.message ?: "Try again when connected."}")
+            mutable.value = UpdateStatus(message = "Could not check GitHub. ${e.message ?: "Try again when connected."}",
+                release = previous.release, apk = previous.apk)
             false
         }
     }
@@ -93,7 +101,11 @@ object GitHubUpdates {
     }
 
     fun verify(ctx: Context, apk: File, version: String) {
-        val flags = if (Build.VERSION.SDK_INT >= 28) PackageManager.GET_SIGNING_CERTIFICATES else PackageManager.GET_SIGNATURES
+        // Android 9's getPackageArchiveInfo collects certificates only when GET_SIGNATURES is set;
+        // with GET_SIGNING_CERTIFICATES alone signingInfo was null and every update looked foreign.
+        @Suppress("DEPRECATION")
+        val flags = if (Build.VERSION.SDK_INT >= 28) PackageManager.GET_SIGNING_CERTIFICATES or PackageManager.GET_SIGNATURES
+            else PackageManager.GET_SIGNATURES
         @Suppress("DEPRECATION")
         val installed = ctx.packageManager.getPackageInfo(ctx.packageName, flags)
         @Suppress("DEPRECATION")
@@ -103,13 +115,20 @@ object GitHubUpdates {
             @Suppress("DEPRECATION")
             p.versionCode.toLong()
         }
+        fun sha(list: Array<out android.content.pm.Signature>?): Set<String> =
+            list?.map { hex(MessageDigest.getInstance("SHA-256").digest(it.toByteArray())) }?.toSet() ?: emptySet()
         fun certs(p: PackageInfo): Set<String> {
             @Suppress("DEPRECATION")
-            val signatures = if (Build.VERSION.SDK_INT >= 28) p.signingInfo?.apkContentsSigners else p.signatures
-            return signatures?.map { hex(MessageDigest.getInstance("SHA-256").digest(it.toByteArray())) }?.toSet() ?: emptySet()
+            return sha(if (Build.VERSION.SDK_INT >= 28) p.signingInfo?.apkContentsSigners else p.signatures)
+        }
+        /** Current signer plus any rotated-from certificates (v3 lineage); API < 28 has no lineage. */
+        fun lineage(p: PackageInfo): Set<String> {
+            if (Build.VERSION.SDK_INT < 28) return certs(p)
+            val info = p.signingInfo ?: return emptySet()
+            return sha(if (info.hasMultipleSigners()) info.apkContentsSigners else info.signingCertificateHistory)
         }
         ReleasePolicy.validateApk(archive.packageName, ctx.packageName, code(archive), code(installed),
-            archive.versionName, version, certs(archive), certs(installed))
+            archive.versionName, version, certs(archive), certs(installed), lineage(archive))
     }
 
     internal fun extract(zip: File, output: File, expected: String) {
