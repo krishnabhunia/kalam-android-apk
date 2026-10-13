@@ -26,6 +26,9 @@ def infer_bump(messages):
     for message in messages:
         lines = message.strip().splitlines()
         subject = lines[0] if lines else ''
+        # Required assistant PR titles remain meaningful when GitHub uses them
+        # verbatim for a squash-merge commit subject.
+        subject = re.sub(r'^(?:cgpt-|cld-)', '', subject)
         if (re.match(r'^[A-Za-z][A-Za-z0-9_-]*(?:\([^)]+\))?!:', subject)
                 or re.search(r'(?m)^BREAKING[ -]CHANGE:\s*\S', message)):
             return 'major'

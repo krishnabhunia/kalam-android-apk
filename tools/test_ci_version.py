@@ -71,6 +71,10 @@ class VersionTest(unittest.TestCase):
         cases = [
             (['fix: installer conflict', 'docs: update help'], 'patch'),
             (['fix: bug', 'feat(clocks): backup clocks'], 'minor'),
+            (['cgpt-feat: add daily GitHub updates'], 'minor'),
+            (['cgpt-feat!: replace storage format'], 'major'),
+            (['cld-feat(updates): add update checks'], 'minor'),
+            (['docs-cgpt-feat: quoted title'], 'patch'),
             (['feat!: replace storage format', 'fix: bug'], 'major'),
             (['fix(storage)!: change identifiers'], 'major'),
             (['feat: add updates\n\nBREAKING CHANGE: replace the package identity'], 'major'),
