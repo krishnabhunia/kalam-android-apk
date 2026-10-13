@@ -69,6 +69,34 @@ One uninstall/reinstall may be needed to adopt the
 permanent key; restore the clocks afterward. Future same-key, higher-versionCode
 updates preserve private app data. The app updater never uninstalls Kalam.
 
+Migration runbook for phones that have 1.22.0 or 1.23.0 (each was signed with a
+different throw-away runner key, so neither can be updated in place):
+
+| SrNo. | Step | Why |
+| --- | --- | --- |
+| 1 | Back up clocks to Downloads; write down saved places, Prokerala Client ID/secret, My details and anything in Match history you need | Only clocks are in the backup file |
+| 2 | Uninstall Kalam and answer **No / do not keep app data** if Android asks | Kept data keeps the old certificate on record; Android then refuses the new APK with "App not installed — package conflicts" |
+| 3 | Install the permanently signed APK (1.24.0 or later), then Settings → Clock backup → Restore | Android's own backup restore is tied to the old key and will not bring data across |
+| 4 | Re-enter the noted settings | — |
+| 5 | Every later update installs over it and keeps all data | Same key, higher version code |
+
+### Who can use the key
+
+As set up by `tools/configure_android_signing.py`, the `android-signing`
+environment admits `main` and `codex/*` branches (check Settings → Environments
+if you changed it). A manual
+(`workflow_dispatch`) run uses the selected branch's **own** workflow file and
+`tools/`, so anyone or any coding agent that can push a `codex/*` branch could
+change them to print the key. Add yourself under **Required reviewers** on the
+environment and approve a run only after reading the branch's `.github/` and
+`tools/` changes. Branches outside those rules (for example Claude's `cld-*`)
+get unsigned validation builds only.
+
+When copying values with `setup_android_signing.ps1 -Mode CopySecret`, clear
+Windows clipboard history afterwards (Win+V → Clear all): it keeps copied
+passwords and can sync them to other devices. `configure_android_signing.ps1`
+avoids the clipboard entirely.
+
 ## In-app controls
 
 Open **Settings → App updates**. The collapsed card shows only its title and

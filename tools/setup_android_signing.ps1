@@ -55,6 +55,8 @@ if ($Mode -eq 'CopySecret') {
     }
     Set-Clipboard -Value $value
     Write-Host "$SecretName copied. Paste it into the matching GitHub android-signing environment secret."
+    Write-Host 'Then clear Windows clipboard history (Win+V > Clear all); it keeps copied passwords.'
+
     exit
 }
 try {
