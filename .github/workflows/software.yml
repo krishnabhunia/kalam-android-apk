@@ -37,7 +37,6 @@ jobs:
       - name: Allocate semantic version and synchronize badges
         id: version
         env:
-          VERSION_BUMP: minor
           PUBLISH_BETA: ${{ inputs.publish_beta }}
         run: python tools/ci_version.py
       - name: Test and check version
@@ -56,7 +55,7 @@ jobs:
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
           ANDROID_SIGNING_CERT_SHA256: ${{ vars.ANDROID_SIGNING_CERT_SHA256 }}
           VERSION: ${{ steps.version.outputs.version }}
-        run: python tools/sign_apk.py app/build/outputs/apk/release/app-release-unsigned.apk "package/Android/Kalam_${VERSION}.apk"
+        run: python tools/sign_apk.py android/app/build/outputs/apk/release/app-release-unsigned.apk "package/Android/Kalam_${VERSION}.apk"
       - name: Verify and package the delivered APK
         env:
           VERSION: ${{ steps.version.outputs.version }}
@@ -88,36 +87,13 @@ jobs:
           name: Kalam_${{ needs.android.outputs.version }}.zip
           path: release
           skip-decompress: true
-      - name: Tag the source with the delivered version metadata
-        env:
-          VERSION: ${{ needs.android.outputs.version }}
-          CODE: ${{ needs.android.outputs.code }}
-          RELEASE_DATE: ${{ needs.android.outputs.date }}
-        run: |
-          python - <<'PY'
-          import os, pathlib, re
-          version, code, date = os.environ['VERSION'], os.environ['CODE'], os.environ['RELEASE_DATE']
-          assert re.fullmatch(r'[0-9]+\.[0-9]+\.[0-9]+(?:-beta\.[0-9A-Za-z.]+)?', version)
-          assert code.isdigit()
-          p = pathlib.Path('app/build.gradle')
-          p.write_text(re.sub(r'versionCode \d+; versionName "[^"]+"', f'versionCode {code}; versionName "{version}"', p.read_text()))
-          p = pathlib.Path('app/src/main/java/com/krishna/kalam/AppVersion.kt')
-          s = re.sub(r'const val NAME = "[^"]+"', f'const val NAME = "{version}"', p.read_text())
-          p.write_text(re.sub(r'const val RELEASE_DATE = "[^"]+"', f'const val RELEASE_DATE = "{date}"', s))
-          PY
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add app/build.gradle app/src/main/java/com/krishna/kalam/AppVersion.kt
-          git commit --allow-empty -m "Record delivered Kalam $VERSION metadata"
-          git tag "v$VERSION"
-          git push origin "refs/tags/v$VERSION"
-      - name: Publish the verified ZIP
+      - name: Publish stable or explicitly requested beta release
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           VERSION: ${{ needs.android.outputs.version }}
+          CODE: ${{ needs.android.outputs.code }}
+          RELEASE_DATE: ${{ needs.android.outputs.date }}
+          TARGET: ${{ github.sha }}
           BETA: ${{ github.event_name == 'workflow_dispatch' }}
-        run: |
-          FLAGS=()
-          if [ "$BETA" = "true" ]; then FLAGS+=(--prerelease --latest=false); fi
-          gh release create "v$VERSION" "release/Kalam_${VERSION}.zip" --verify-tag --title "Kalam v$VERSION" --generate-notes "${FLAGS[@]}"
+        run: python tools/publish_release.py

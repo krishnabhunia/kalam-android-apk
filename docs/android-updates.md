@@ -18,7 +18,13 @@ inside an APK cannot recreate its private key. If the temporary runner's key was
 not saved, generate a permanent release key once and keep an offline backup.
 Never generate a replacement key for a normal update.
 
-Configure these GitHub repository Actions secrets before building installable
+The permanent key was configured for this repository on 13 October 2026.
+Its public certificate SHA-256 is
+`cbf0629ab8ec6a17ade171bdf363539ca36cbaaea026830427e887bb01c2f301`.
+The private key and Windows-encrypted credential backup are stored outside the
+repository in `%LOCALAPPDATA%/KalamSigning`; do not regenerate them.
+
+For another installation, configure these GitHub repository Actions secrets before building installable
 artifacts with the new workflow:
 
 - `ANDROID_KEYSTORE_BASE64`: base64 of the permanent keystore's binary contents.
@@ -37,6 +43,11 @@ once in `%LOCALAPPDATA%/KalamSigning`. It refuses to overwrite an existing key.
 The helper encrypts saved passwords for the current Windows user. Use
 `-Mode CopySecret -SecretName <name>` to copy each value locally, and enter it
 into the matching GitHub secret yourself; the helper never prints passwords.
+With the selected account already authenticated in Git Credential Manager,
+`tools/configure_android_signing.ps1 -Repository owner/repo -GitHubLogin login`
+can encrypt/upload the four secrets and set/verify the fingerprint variable.
+It requires the Python PyNaCl package, checks the selected login, refuses to
+overwrite existing signing secrets, and never prints private values.
 Default Fingerprint mode displays the public fingerprint for the variable.
 Keep a secure offline copy of the keystore and the actual passwords: Windows
 encrypted credentials alone cannot be recovered by another Windows account.
@@ -58,7 +69,10 @@ Open **Settings → App updates**. The collapsed card shows only its title and
 arrow. The expanded section shows the installed version, Check GitHub for
 updates, and an optional Include beta versions switch (off by default).
 
-Kalam also checks when the app starts. It reads published GitHub Releases,
+Kalam also checks when the app starts. The default-on Check for updates every day
+setting schedules a persistent 24-hour WorkManager check with an internet
+constraint. Android may delay background work to save battery. Last-check
+results and time survive process restarts. It reads published GitHub Releases,
 compares semantic versions numerically, and ignores drafts, older versions,
 foreign assets and releases without a usable SHA-256 checksum. PR artifacts
 are not public GitHub releases and do not appear in this feed automatically.

@@ -91,6 +91,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Logger.init(this)
+        try { com.krishna.kalam.update.DailyUpdateSchedule.apply(this) }
+        catch (e: Exception) { Logger.e("Updates", "daily update schedule failed", e) }
         Notifs.ensureChannel(this)
         if (Build.VERSION.SDK_INT >= 33) notifPerm.launch(Manifest.permission.POST_NOTIFICATIONS)
         AlarmScheduler.rearmToday(this)
@@ -124,7 +126,10 @@ fun Root() {
     val f = fontsOf(settings)
 
     LaunchedEffect(Unit) {
-        try { com.krishna.kalam.update.GitHubUpdates.check(Prefs.includeBeta(ctx)) }
+        try {
+            com.krishna.kalam.update.UpdateChecks.restoreHistory(ctx)
+            com.krishna.kalam.update.UpdateChecks.check(ctx, Prefs.includeBeta(ctx))
+        }
         catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
             Logger.e("Updates", "startup update check failed", e)

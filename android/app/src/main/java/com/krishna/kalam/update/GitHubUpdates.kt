@@ -28,7 +28,7 @@ object GitHubUpdates {
     val status = mutable.asStateFlow()
     private val lock = Mutex()
 
-    suspend fun check(includeBeta: Boolean) = lock.withLock {
+    suspend fun check(includeBeta: Boolean): Boolean = lock.withLock {
         mutable.value = UpdateStatus(busy = true, message = "Checking GitHub…")
         try {
             val releases = withContext(Dispatchers.IO) {
@@ -49,10 +49,12 @@ object GitHubUpdates {
             mutable.value = UpdateStatus(message = if (release != null) "Version ${release.version} is available"
                 else "No newer ${if (includeBeta) "stable or beta" else "stable"} version is available", release = release)
             Logger.e("Updates", "GitHub check completed; update=${release?.version ?: "none"}")
+            true
         } catch (e: Exception) {
             if (e is CancellationException) { mutable.value = UpdateStatus(); throw e }
             Logger.e("Updates", "GitHub check failed", e)
             mutable.value = UpdateStatus(message = "Could not check GitHub. ${e.message ?: "Try again when connected."}")
+            false
         }
     }
 

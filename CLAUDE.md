@@ -1,5 +1,16 @@
 # Kalam Android — working agreement (read this first)
 
+## 13 October 2026 repository instruction update
+The user explicitly required github.md, versions_management.md and workflows.md
+from G:/My Drive/Github Skills. Platform source lives in android/app, with docs,
+windows, macOS and common present. Desktop source is absent and skipped. PR titles
+use cgpt-. The one Software workflow automatically allocates SemVer from unreleased
+commits, creates beta PR builds, and publishes stable builds after merge. Android
+checks at startup and optionally each day; beta updates remain optional. All
+installable artifacts use the protected permanent signing key, never a fresh
+runner debug key. The legacy notes below are historical where these user
+instructions or the current implementation supersede them.
+
 ## 9 October 2026 user override
 The user explicitly requested implementation and a PR to match the traditional
 calendar followed in Midnapore (9 October = 21 Ashwin 1433). This supersedes the

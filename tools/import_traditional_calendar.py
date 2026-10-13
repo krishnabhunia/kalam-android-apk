@@ -52,10 +52,10 @@ if __name__ == '__main__':
         left['days'] = (dt.date.fromisoformat(right['start'])-dt.date.fromisoformat(left['start'])).days
         assert 29 <= left['days'] <= 32, (left, right)
     rows = rows[:-1]
-    target = ROOT/'app/src/test/resources/traditional-months.json'
+    target = ROOT/'android/app/src/test/resources/traditional-months.json'
     target.write_text(json.dumps(rows, indent=2)+'\n', encoding='utf-8')
     lines = '\n'.join(f'        Month(LocalDate.parse("{r["start"]}"), {r["year"]}, {r["month"]}, {r["days"]}),' for r in rows)
-    (ROOT/'app/src/main/java/com/krishna/kalam/core/TraditionalCalendar.kt').write_text('''package com.krishna.kalam.core
+    (ROOT/'android/app/src/main/java/com/krishna/kalam/core/TraditionalCalendar.kt').write_text('''package com.krishna.kalam.core
 
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit

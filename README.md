@@ -30,7 +30,7 @@ The single artifact is `Kalam_<version>.zip`; one extraction reveals
 `Android/Kalam_<version>.apk`. Windows and macOS are absent and are skipped.
 Installable workflow APKs require the permanent signing key in protected GitHub
 Actions secrets. Missing signing configuration blocks publication rather than
-generating a different debug key. Settings includes GitHub update checks,
+generating a different debug key. Settings includes daily background and startup GitHub update checks,
 optional beta releases, verified download and Android's installation prompt.
 See [Android updates and signing setup](docs/android-updates.md).
 
@@ -45,3 +45,17 @@ Birth-detail defaults are blank in a fresh install.
 Every release passes: unit suite · version gate · `aapt` badging on the *delivered* APK ·
 zip-content greps · md5-distinct-from-previous. External data (Bengali calendar, tithi,
 weather payloads) is wire-verified at build and baked in as test vectors.
+
+## Repository layout
+
+- `android/app`: Android source, mapped to the Gradle `:app` module.
+- `docs`: designs and documentation.
+- `windows` and `macOS`: reserved; no desktop source is implemented, so these platforms are skipped.
+- `common`: shared layout notes; common build scripts remain in `tools`.
+
+PRs use the `cgpt-` title prefix. GitHub selects major/minor/patch automatically
+from unreleased Conventional Commits (`feat:` is minor, breaking changes major,
+ordinary fixes patch); PR and manual builds are beta versions. The single
+Software workflow builds, signs, verifies and uploads one `Kalam_<version>.zip`.
+Stable release publication happens after merging to main. `release.sh` delegates
+to this same workflow and accepts no manually assigned version.

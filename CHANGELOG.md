@@ -1,3 +1,17 @@
+## 13 October 2026 — correct PR build and instruction compliance
+
+- Configure and verify one protected permanent Android signing key; no private
+  key or password is committed. Retain a local Windows-encrypted backup.
+- Add required platform folders and move Android source to android/app while
+  preserving the Gradle :app module and one unified Software workflow.
+- Add default-on daily background update checks, persisted last-check details,
+  and an immediate Settings toggle; retain startup/manual checks and optional beta.
+- Automatically classify major/minor/patch from unreleased Conventional Commits;
+  beta retries now receive higher Android version codes.
+- Make release publishing safe to retry without changing an existing tag or APK.
+- Delegate legacy local release requests to the same automatic GitHub workflow.
+- Record the adopted GitHub documents in docs/instructions; PR title uses cgpt-.
+
 # Kalam — Android BACKLOG
 
 Package `com.krishna.kalam` · Kotlin/Compose · minSdk 26 · targetSdk 34 · JDK21 · Gradle 8.7
